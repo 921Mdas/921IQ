@@ -1,0 +1,73 @@
+/* Container */
+.search-bar-container {
+  max-width: 800px;
+  width: 100%;
+  margin: 4vh auto;
+  border: solid 1px var(--color-highlight);
+  padding: 0 10px; /* Add some horizontal padding */
+  box-sizing: border-box;
+}
+
+/* Wrapper */
+.search-bar-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Input styles */
+.search-bar-wrapper input {
+  width: 100%;  /* Default width on desktop */
+  max-width: 800px;
+  height: 100%;
+  padding: 20px 20px;
+  font-size: 1.4rem;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  color: #333;
+  outline: none;
+  transition: border-color 0.3s, background-color 0.3s;
+  box-sizing: border-box;
+}
+
+/* Placeholder */
+.search-bar-wrapper input::placeholder {
+  color: #aaa;
+}
+
+/* Label floating animation */
+.search-bar-wrapper label {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
+  color: #aaa;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  background-color: transparent;
+}
+
+/* Focus or has value */
+.search-bar-wrapper input:focus + label,
+.search-bar-wrapper input:not(:placeholder-shown) + label {
+  top: -10px;
+  font-size: 1.1rem;
+  background-color: rgb(206, 206, 206);
+  padding: 10px;
+  border-radius: 5px;
+  color: #8bc33b;
+}
+
+/* Input focus */
+.search-bar-wrapper input:focus {
+  border-color: var(--color-highlight);
+  background-color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .search-bar-wrapper input {
+    width: 100%;  /* Fill container on small screens */
+  }
+}

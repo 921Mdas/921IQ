@@ -1,0 +1,161 @@
+.content {
+  background-color: #f7f8fa;
+  font-family: sans-serif;
+  color: #333;
+  padding: 1rem;
+}
+
+.content-inner {
+  margin: 2rem 0;
+}
+
+/* Container holding both columns */
+.responsive-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 50% 50% */
+  gap: 2rem;
+}
+
+/* Articles column */
+.articles-column {
+  width: 100%;
+  max-width: 100%;
+}
+
+.article-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.article-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.article-image {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.article-info {
+  flex: 1;
+}
+
+.article-title {
+  color: #1a202c;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.article-date {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.source-name {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.source-name.missing {
+  color: red;
+}
+
+/*dashboard*/
+/* Widgets column */
+
+.widgets-column {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.widgets-column h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+
+.widgets-column p {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Ensure visual elements inside widgets scale */
+.widgets-column canvas,
+.widgets-column svg,
+.widgets-column img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+
+
+.widget-card{
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  padding: 1em;
+}
+
+#wordCloud{
+  height: auto;
+  max-width: 440px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+#shareOfVoiceChart {
+  width: 80% !important;
+  height: auto;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/*pagination*/
+  .pagination {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin: 2rem 0;
+  }
+  .page-link {
+    padding: .45rem .75rem;
+    background: #eee;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #333;
+    font-size: .9rem;
+  }
+  .page-link.active {
+    background: #4F46E5;
+    color: #fff;
+    pointer-events: none;
+  }
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .responsive-container {
+    grid-template-columns: 1fr; /* Stack vertically */
+  }
+
+  .widgets-column,
+  .articles-column {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+

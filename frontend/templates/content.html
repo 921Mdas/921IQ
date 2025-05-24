@@ -1,0 +1,62 @@
+
+
+<div class="content">
+  <div class="content-inner">
+    {% include 'searchbar.html' %}
+
+    <div class="responsive-container">
+      <!-- Articles Section -->
+      <div class="articles-column">
+        <ul class="article-list">
+          {% for article in articles %}
+            <li class="article-card">
+              <img
+                src="{{ article.source_logo or url_for('static', filename='Images/news-icon.png') }}"
+                alt="{{ article.source_name or 'News icon' }}"
+                class="article-image"
+                onerror="this.onerror=null; this.src='{{ url_for('static', filename='Images/news-icon.png') }}';"
+              />
+              <div class="article-info">
+                <a href="{{ article.url }}" target="_blank" class="article-title">{{ article.title }}</a>
+                <div class="article-date">{{ article.date }}</div>
+                {% if article.source_name %}
+                  <div class="source-name">{{ article.source_name }}</div>
+                {% else %}
+                  <div class="source-name missing">No source_name found</div>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <!-- ⬇️  Pagination bar -->
+        <div class="pagination">
+          {# Previous button #}
+          {% if current_page > 1 %}
+            <a href="{{ url_for('home', page=current_page-1) }}" class="page-link">Previous</a>
+          {% endif %}
+
+          {# Page numbers #}
+          {% for page_num in range(1, total_pages + 1) %}
+            <a href="{{ url_for('home', page=page_num) }}"
+               class="page-link {% if page_num == current_page %}active{% endif %}">
+              {{ page_num }}
+            </a>
+          {% endfor %}
+
+          {# Next button #}
+          {% if current_page < total_pages %}
+            <a href="{{ url_for('home', page=current_page+1) }}" class="page-link">Next</a>
+          {% endif %}
+        </div>
+        <!-- /pagination -->
+      </div>
+
+      <!-- Widgets Section -->
+      <div class="analytics">
+        {% include 'dashboard.html' %}
+      </div>
+    </div>
+  </div>
+</div>
+
