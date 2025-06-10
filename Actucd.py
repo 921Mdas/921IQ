@@ -1,9 +1,13 @@
 from urllib.parse import urljoin
 from ArticleDB import runDB
 from bs4 import BeautifulSoup
-from helper import convert_date
+from helper import convert_date, find_ads, testSoup
 
 base_url = 'https://actualite.cd'
+
+adSoup = testSoup(base_url)
+find_ads( adSoup)
+
 
 def ActuCdScrap(page):
     try:
@@ -13,6 +17,9 @@ def ActuCdScrap(page):
 
         soup = BeautifulSoup(page.content(), 'html.parser')
         articles = soup.find_all('div', class_='what-cap')
+     
+       
+
 
         for article in articles:
             date_tag = article.select_one('span')

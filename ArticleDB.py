@@ -25,7 +25,7 @@ def runDB(data: list):
 
             # Validate required fields
             if not (title and url and date_value and source_name and source_logo):
-                print(f"⚠️ Skipped (missing field): {article}")
+                # print(f"⚠️ Skipped (missing field): {article}")
                 continue
 
             # Check for duplicates and if missing source fields
@@ -51,7 +51,8 @@ def runDB(data: list):
                     updated_article_count += 1
                     print(f"🔄 Updated article: {url}")
                 else:
-                    print(f"⚠️ Skipped (already exists and complete): {url}")
+                    # print(f"⚠️ Skipped (already exists and complete): {url}")
+                    print()
                 continue
 
             # Insert valid article including source

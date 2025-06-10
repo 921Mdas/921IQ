@@ -15,6 +15,7 @@ html[data-theme="dark"] {
   --color-highlight: #8bc33b;
   --color-button: #ff6d56;
   --color-card-bg: #1e1e24;
+  --theme-color: #4F46E5
 }
 
 /* LIGHT THEME */
@@ -73,6 +74,7 @@ body {
 
 .navbar {
   grid-area: navbar;
+  padding-left: 1em;
 }
 
 .sidebar {
@@ -106,6 +108,18 @@ header {
   font-size: 2rem;
   font-weight: bold;
   color: var(--color-surface);
+  display: flex;
+  justify-content: start;
+  align-items: center; /* This ensures vertical alignment */
+  gap: .5em; /* Adds space between icon and text */
+  width: 8vw;
+  color: #4F46E5 ;
+
+}
+
+.logo .icon {
+  width: 1.3em;
+ aspect-ratio: 1/1;
 }
 
 .hamburger {
@@ -149,8 +163,8 @@ li {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  /* margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); */
 }
 
 .source-logo {

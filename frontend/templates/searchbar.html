@@ -1,6 +1,74 @@
 <div class="search-bar-container">
-  <div class="search-bar-wrapper">
-    <input type="text" id="searchInput" required placeholder=" " />
-    <label for="searchInput">🔍</label>
-  </div>
+  <form id="searchForm">
+    <!-- AND -->
+    <div class="search-bar-wrapper tags-input" data-type="and">
+      <div class="tags"></div>
+      <input type="text" id="andInput" placeholder="Keyword AND..." />
+    </div>
+
+    <!-- OR -->
+    <div class="search-bar-wrapper tags-input" data-type="or">
+      <div class="tags"></div>
+      <input type="text" id="orInput" placeholder="Keyword OR..." />
+    </div>
+
+    <!-- NOT -->
+    <div class="search-bar-wrapper tags-input" data-type="not">
+      <div class="tags"></div>
+      <input type="text" id="notInput" placeholder="Keyword NOT..." />
+    </div>
+
+    <button type="submit" class="modern-button">Search</button>
+  </form>
 </div>
+
+<script>
+  document.querySelectorAll('.tags-input').forEach(wrapper => {
+    const input = wrapper.querySelector('input');
+    const tagContainer = wrapper.querySelector('.tags');
+    const keywords = [];
+  
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && input.value.trim()) {
+        e.preventDefault();
+        const value = input.value.trim();
+  
+        if (!keywords.includes(value)) {
+          keywords.push(value);
+  
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.textContent = value;
+  
+          const removeBtn = document.createElement('span');
+          removeBtn.className = 'remove-tag';
+          removeBtn.textContent = '×';
+          removeBtn.onclick = () => {
+            tagContainer.removeChild(tag);
+            keywords.splice(keywords.indexOf(value), 1);
+          };
+  
+          tag.appendChild(removeBtn);
+          tagContainer.appendChild(tag);
+          input.value = '';
+        }
+      }
+    });
+  
+    wrapper.getKeywords = () => [...keywords];
+  });
+  
+  // Submission handler
+  document.getElementById('searchForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const wrappers = document.querySelectorAll('.tags-input');
+  
+    const query = {
+      and: wrappers[0].getKeywords(),
+      or: wrappers[1].getKeywords(),
+      not: wrappers[2].getKeywords()
+    };
+  
+    console.log('Search Query:', query);
+  });
+</script>
