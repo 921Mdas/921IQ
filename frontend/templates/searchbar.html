@@ -27,19 +27,19 @@
     const input = wrapper.querySelector('input');
     const tagContainer = wrapper.querySelector('.tags');
     const keywords = [];
-  
+
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && input.value.trim()) {
         e.preventDefault();
         const value = input.value.trim();
-  
+
         if (!keywords.includes(value)) {
           keywords.push(value);
-  
+
           const tag = document.createElement('span');
           tag.className = 'tag';
           tag.textContent = value;
-  
+
           const removeBtn = document.createElement('span');
           removeBtn.className = 'remove-tag';
           removeBtn.textContent = '×';
@@ -47,28 +47,56 @@
             tagContainer.removeChild(tag);
             keywords.splice(keywords.indexOf(value), 1);
           };
-  
+
           tag.appendChild(removeBtn);
           tagContainer.appendChild(tag);
           input.value = '';
         }
       }
     });
-  
+
     wrapper.getKeywords = () => [...keywords];
   });
-  
-  // Submission handler
-  document.getElementById('searchForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const wrappers = document.querySelectorAll('.tags-input');
-  
-    const query = {
-      and: wrappers[0].getKeywords(),
-      or: wrappers[1].getKeywords(),
-      not: wrappers[2].getKeywords()
-    };
-  
-    console.log('Search Query:', query);
-  });
+
+  document.getElementById('searchForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const wrappers = document.querySelectorAll('.tags-input');
+
+  const query = {
+    and: wrappers[0].getKeywords(),
+    or: wrappers[1].getKeywords(),
+    not: wrappers[2].getKeywords()
+  };
+
+  // 🚫 Prevent API call if both AND and OR are empty
+  const hasValidInput = query.and.length || query.or.length;
+  if (!hasValidInput) {
+    console.warn('Search aborted: no AND or OR keywords provided.');
+    return;
+  }
+
+  // ✅ Proceed to build URL
+  const url = new URL('/api/search', window.location.origin);
+  query.and.forEach(k => url.searchParams.append('and', k));
+  query.or.forEach(k => url.searchParams.append('or', k));
+
+  // Only add NOT if AND or OR are present
+  query.not.forEach(k => url.searchParams.append('not', k));
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (res.ok) {
+      window.SearchStore.setQuery(query);
+      window.SearchStore.setResults(data.articles || []);
+    } else {
+      console.error('Search failed:', data.error || data);
+    }
+  } catch (err) {
+    console.error('Fetch error:', err);
+  }
+});
+
+
 </script>

@@ -1,32 +1,80 @@
+<script>
+  //store
+  window.SearchStore = {
+    query: { and: [], or: [], not: [] },
+    articles: [],
+    subscribers: [],
 
+    setQuery(query) {
+      this.query = query;
+      this.notify();
+    },
+
+    setResults(results) {
+      this.results = results;
+      this.notify();
+    },
+
+    onUpdate(callback) {
+      this.subscribers.push(callback);
+    },
+
+    notify() {
+      this.subscribers.forEach(fn => fn(this.query, this.results));
+    }
+  };
+
+  window.initialArticles = {{ articles | tojson }};
+
+
+function renderResults(query, articles) {
+  const list = document.querySelector('.article-list');
+  list.innerHTML = ''; // Clear existing content
+
+  if (!articles || articles.length === 0) {
+    list.innerHTML = '<p>No articles found.</p>';
+    return;
+  }
+
+  articles.forEach(article => {
+    const li = document.createElement('li');
+    li.className = 'article-card';
+
+    const imgSrc = article.source_logo || '/static/Images/news-icon.png';
+    const safeDate = article.date ? new Date(article.date).toLocaleDateString() : '';
+
+    li.innerHTML = `
+      <img
+        src="${imgSrc}"
+        alt="${article.source_name || 'News icon'}"
+        class="article-image"
+        onerror="this.onerror=null; this.src='/static/Images/news-icon.png';"
+      />
+      <div class="article-info">
+        <a href="${article.url}" target="_blank" class="article-title">${article.title}</a>
+        <div class="article-date">${safeDate}</div>
+        <div class="source-name">${article.source_name || '<span class="missing">No source_name found</span>'}</div>
+      </div>
+    `;
+
+    list.appendChild(li);
+  });
+}
+
+  window.SearchStore.onUpdate(renderResults);
+  // Trigger initial render if the page loads with data
+  renderResults(window.SearchStore.query, window.SearchStore.articles);
+</script>
 
 <div class="content">
   <div class="content-inner">
     {% include 'searchbar.html' %}
 
     <div class="responsive-container">
+      <!-- <div id="resultsContainer"></div> -->
       <!-- Articles Section -->
       <div class="articles-column">
         <ul class="article-list">
-          {% for article in articles %}
-            <li class="article-card">
-              <img
-                src="{{ article.source_logo or url_for('static', filename='Images/news-icon.png') }}"
-                alt="{{ article.source_name or 'News icon' }}"
-                class="article-image"
-                onerror="this.onerror=null; this.src='{{ url_for('static', filename='Images/news-icon.png') }}';"
-              />
-              <div class="article-info">
-                <a href="{{ article.url }}" target="_blank" class="article-title">{{ article.title }}</a>
-                <div class="article-date">{{ article.date }}</div>
-                {% if article.source_name %}
-                  <div class="source-name">{{ article.source_name }}</div>
-                {% else %}
-                  <div class="source-name missing">No source_name found</div>
-                {% endif %}
-              </div>
-            </li>
-          {% endfor %}
         </ul>
 
         <!-- ⬇️  Pagination bar -->

@@ -132,7 +132,7 @@ def search_articles():
         """, params)
 
         articles = cursor.fetchall()
-        return jsonify({"results": articles})
+        return jsonify({"articles": articles})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
