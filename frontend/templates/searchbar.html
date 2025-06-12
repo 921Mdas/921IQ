@@ -1,5 +1,6 @@
 <div class="search-bar-container">
   <form id="searchForm">
+
     <!-- AND -->
     <div class="search-bar-wrapper tags-input" data-type="and">
       <div class="tags"></div>
@@ -18,24 +19,123 @@
       <input type="text" id="notInput" placeholder="Keyword NOT..." />
     </div>
 
-    <button type="submit" class="modern-button">Search</button>
+    <div class="button-group">
+      <button type="button" id="clearAllBtn" class="modern-button-danger danger">Clear</button>
+      <button type="submit" class="modern-button">Search</button>
+    </div>
+
+ 
   </form>
 </div>
 
 <script>
-  document.querySelectorAll('.tags-input').forEach(wrapper => {
+  // Store references for all wrappers to rebuild tags on load
+  const wrappers = Array.from(document.querySelectorAll('.tags-input'));
+
+  // This will store the keywords for each wrapper by type
+  const allKeywords = {
+    and: [],
+    or: [],
+    not: []
+  };
+
+  // Initialize tag inputs with add/remove functionality
+  wrappers.forEach(wrapper => {
+    const type = wrapper.dataset.type;  // and, or, not
     const input = wrapper.querySelector('input');
     const tagContainer = wrapper.querySelector('.tags');
-    const keywords = [];
+
+    const keywords = allKeywords[type];  // bind to allKeywords[type]
+
+    function addTag(value) {
+      if (!value || keywords.includes(value)) return;
+      keywords.push(value);
+
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = value;
+
+      const removeBtn = document.createElement('span');
+      removeBtn.className = 'remove-tag';
+      removeBtn.textContent = '×';
+      removeBtn.onclick = () => {
+        tagContainer.removeChild(tag);
+        keywords.splice(keywords.indexOf(value), 1);
+      };
+
+      tag.appendChild(removeBtn);
+      tagContainer.appendChild(tag);
+    }
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && input.value.trim()) {
         e.preventDefault();
-        const value = input.value.trim();
+        addTag(input.value.trim());
+        input.value = '';
+      }
+    });
 
-        if (!keywords.includes(value)) {
-          keywords.push(value);
+    input.addEventListener('blur', () => {
+  if (input.value.trim()) {
+    addTag(input.value.trim());
+    input.value = '';
+  }
+});
 
+    // Method to get current keywords
+    wrapper.getKeywords = () => [...keywords];
+  });
+
+  // On form submit, serialize keywords and redirect
+  document.getElementById('searchForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const query = {
+      and: wrappers.find(w => w.dataset.type === 'and').getKeywords(),
+      or: wrappers.find(w => w.dataset.type === 'or').getKeywords(),
+      not: wrappers.find(w => w.dataset.type === 'not').getKeywords()
+    };
+
+    const params = new URLSearchParams();
+
+    query.and.forEach(kw => params.append("and", kw));
+    query.or.forEach(kw => params.append("or", kw));
+    query.not.forEach(kw => params.append("not", kw));
+
+    // Redirect to the same page with query params
+    window.location.href = `/?${params.toString()}`;
+  });
+
+  // --- On page load, restore tags from URL params ---
+  function restoreTagsFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Clear existing keywords (in case)
+    allKeywords.and.length = 0;
+    allKeywords.or.length = 0;
+    allKeywords.not.length = 0;
+
+    // Clear all tag containers visually
+    wrappers.forEach(wrapper => {
+      wrapper.querySelector('.tags').innerHTML = '';
+    });
+
+    // Helper to restore tags for a type
+    function restore(type) {
+      const values = urlParams.getAll(type);
+      const wrapper = wrappers.find(w => w.dataset.type === type);
+      if (!wrapper) return;
+
+      values.forEach(value => {
+        // Add visually and in the array
+        const input = wrapper.querySelector('input');
+        wrapper.querySelector('.tags').innerHTML += ''; // just to confirm clear done above
+        // Use the same addTag logic:
+        // (re-implement addTag here since closure is lost)
+        if (value && !allKeywords[type].includes(value)) {
+          allKeywords[type].push(value);
+
+          const tagContainer = wrapper.querySelector('.tags');
           const tag = document.createElement('span');
           tag.className = 'tag';
           tag.textContent = value;
@@ -45,58 +145,54 @@
           removeBtn.textContent = '×';
           removeBtn.onclick = () => {
             tagContainer.removeChild(tag);
-            keywords.splice(keywords.indexOf(value), 1);
+            allKeywords[type].splice(allKeywords[type].indexOf(value), 1);
           };
 
           tag.appendChild(removeBtn);
           tagContainer.appendChild(tag);
-          input.value = '';
         }
-      }
-    });
+      });
+    }
 
-    wrapper.getKeywords = () => [...keywords];
+    restore('and');
+    restore('or');
+    restore('not');
+  }
+
+  // Run restore on page load
+  restoreTagsFromURL();
+
+
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  // Optionally clear local keyword state before reload
+  allKeywords.and.length = 0;
+  allKeywords.or.length = 0;
+  allKeywords.not.length = 0;
+
+  // You can also clear the tag DOMs if you want immediate visual effect before reload
+  wrappers.forEach(wrapper => {
+    wrapper.querySelector('.tags').innerHTML = '';
+    wrapper.querySelector('input').value = '';
   });
 
-  document.getElementById('searchForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const wrappers = document.querySelectorAll('.tags-input');
-
-  const query = {
-    and: wrappers[0].getKeywords(),
-    or: wrappers[1].getKeywords(),
-    not: wrappers[2].getKeywords()
-  };
-
-  // 🚫 Prevent API call if both AND and OR are empty
-  const hasValidInput = query.and.length || query.or.length;
-  if (!hasValidInput) {
-    console.warn('Search aborted: no AND or OR keywords provided.');
-    return;
-  }
-
-  // ✅ Proceed to build URL
-  const url = new URL('/api/search', window.location.origin);
-  query.and.forEach(k => url.searchParams.append('and', k));
-  query.or.forEach(k => url.searchParams.append('or', k));
-
-  // Only add NOT if AND or OR are present
-  query.not.forEach(k => url.searchParams.append('not', k));
-
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (res.ok) {
-      window.SearchStore.setQuery(query);
-      window.SearchStore.setResults(data.articles || []);
-    } else {
-      console.error('Search failed:', data.error || data);
-    }
-  } catch (err) {
-    console.error('Fetch error:', err);
-  }
+  // Reload the page without any query params
+  window.location.href = window.location.pathname;
 });
-
-
 </script>
+
+<style>
+  /* Simple styles for tags */
+  .tag {
+    display: inline-block;
+    background: #9e9e9e;
+    border-radius: 3px;
+    padding: 2px 5px;
+    margin: 2px;
+  }
+  .remove-tag {
+    margin-left: 5px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+</style>
