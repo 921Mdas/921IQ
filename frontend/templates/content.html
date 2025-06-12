@@ -1,5 +1,50 @@
+<div class="content">
+  <div class="content-inner">
+    {% include 'searchbar.html' %}
+
+    <div class="responsive-container">
+      <!-- Articles Section -->
+      <div class="articles-column">
+        <ul class="article-list">
+          <!-- Articles will be rendered here by JS -->
+        </ul>
+
+       <!-- Pagination bar -->
+            <div class="pagination">
+                  {% macro preserve_keywords(page) -%}
+                    {{ url_for('home', page=page) }}
+                    {% for kw in request.args.getlist('and') %}&and={{ kw }}{% endfor %}
+                    {% for kw in request.args.getlist('or') %}&or={{ kw }}{% endfor %}
+                    {% for kw in request.args.getlist('not') %}&not={{ kw }}{% endfor %}
+                  {%- endmacro %}
+
+                  {% if current_page > 1 %}
+                <a href="{{ preserve_keywords(current_page - 1) }}" class="page-link">Previous</a>
+                  {% endif %}
+
+                  {% for page_num in range(1, total_pages + 1) %}
+                <a href="{{ preserve_keywords(page_num) }}"
+                  class="page-link {% if page_num == current_page %}active{% endif %}">
+                  {{ page_num }}
+                </a>
+                  {% endfor %}
+
+                  {% if current_page < total_pages %}
+                <a href="{{ preserve_keywords(current_page + 1) }}" class="page-link">Next</a>
+                  {% endif %}
+            </div>
+      </div>
+      
+     <button class="hamburger-toggle" onclick="toggleAnalytics()">☰</button>
+      <!-- Widgets Section -->
+      <div class="analytics">
+        {% include 'dashboard.html' %}
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  //store
   window.SearchStore = {
     query: { and: [], or: [], not: [] },
     articles: [],
@@ -11,7 +56,7 @@
     },
 
     setResults(results) {
-      this.results = results;
+      this.articles = results;
       this.notify();
     },
 
@@ -20,91 +65,56 @@
     },
 
     notify() {
-      this.subscribers.forEach(fn => fn(this.query, this.results));
+      this.subscribers.forEach(fn => fn(this.query, this.articles));
     }
   };
 
   window.initialArticles = {{ articles | tojson }};
+  window.SearchStore.articles = window.initialArticles;
 
+  function renderResults(query, articles) {
+    const list = document.querySelector('.article-list');
+    list.innerHTML = ''; // Clear existing content
 
-function renderResults(query, articles) {
-  const list = document.querySelector('.article-list');
-  list.innerHTML = ''; // Clear existing content
+    if (!articles || articles.length === 0) {
+      list.innerHTML = '<p>No articles found.</p>';
+      return;
+    }
 
-  if (!articles || articles.length === 0) {
-    list.innerHTML = '<p>No articles found.</p>';
-    return;
+    articles.forEach(article => {
+      const li = document.createElement('li');
+      li.className = 'article-card';
+
+      const imgSrc = article.source_logo || '/static/Images/news-icon.png';
+      const safeDate = article.date ? new Date(article.date).toLocaleDateString() : '';
+
+      li.innerHTML = `
+        <img
+          src="${imgSrc}"
+          alt="${article.source_name || 'News icon'}"
+          class="article-image"
+          onerror="this.onerror=null; this.src='/static/Images/news-icon.png';"
+        />
+        <div class="article-info">
+          <a href="${article.url}" target="_blank" class="article-title">${article.title}</a>
+          <div class="article-date">${safeDate}</div>
+          <div class="source-name">${article.source_name || '<span class="missing">No source_name found</span>'}</div>
+        </div>
+      `;
+
+      list.appendChild(li);
+    });
   }
 
-  articles.forEach(article => {
-    const li = document.createElement('li');
-    li.className = 'article-card';
-
-    const imgSrc = article.source_logo || '/static/Images/news-icon.png';
-    const safeDate = article.date ? new Date(article.date).toLocaleDateString() : '';
-
-    li.innerHTML = `
-      <img
-        src="${imgSrc}"
-        alt="${article.source_name || 'News icon'}"
-        class="article-image"
-        onerror="this.onerror=null; this.src='/static/Images/news-icon.png';"
-      />
-      <div class="article-info">
-        <a href="${article.url}" target="_blank" class="article-title">${article.title}</a>
-        <div class="article-date">${safeDate}</div>
-        <div class="source-name">${article.source_name || '<span class="missing">No source_name found</span>'}</div>
-      </div>
-    `;
-
-    list.appendChild(li);
-  });
-}
-
   window.SearchStore.onUpdate(renderResults);
-  // Trigger initial render if the page loads with data
+  // Initial render on page load
   renderResults(window.SearchStore.query, window.SearchStore.articles);
+
+
+
+  //toggle menu
+   function toggleAnalytics() {
+    const panel = document.querySelector('.analytics');
+    panel.classList.toggle('active');
+  }
 </script>
-
-<div class="content">
-  <div class="content-inner">
-    {% include 'searchbar.html' %}
-
-    <div class="responsive-container">
-      <!-- <div id="resultsContainer"></div> -->
-      <!-- Articles Section -->
-      <div class="articles-column">
-        <ul class="article-list">
-        </ul>
-
-        <!-- ⬇️  Pagination bar -->
-        <div class="pagination">
-          {# Previous button #}
-          {% if current_page > 1 %}
-            <a href="{{ url_for('home', page=current_page-1) }}" class="page-link">Previous</a>
-          {% endif %}
-
-          {# Page numbers #}
-          {% for page_num in range(1, total_pages + 1) %}
-            <a href="{{ url_for('home', page=page_num) }}"
-               class="page-link {% if page_num == current_page %}active{% endif %}">
-              {{ page_num }}
-            </a>
-          {% endfor %}
-
-          {# Next button #}
-          {% if current_page < total_pages %}
-            <a href="{{ url_for('home', page=current_page+1) }}" class="page-link">Next</a>
-          {% endif %}
-        </div>
-        <!-- /pagination -->
-      </div>
-
-      <!-- Widgets Section -->
-      <div class="analytics">
-        {% include 'dashboard.html' %}
-      </div>
-    </div>
-  </div>
-</div>
-

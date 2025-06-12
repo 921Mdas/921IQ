@@ -41,21 +41,30 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Chart.js line chart
   new Chart(document.getElementById('trendLineChart'), {
-    type: 'line',
-    data: {
-      labels: {{ trend_data.labels | tojson | safe }},
-      datasets: [{
-        label: 'Mentions Over Time',
-        data: {{ trend_data.data | tojson | safe }},
-        borderColor: '#4F46E5',
-        tension: 0.2,
-        fill: false,
-      }]
+  type: 'line',
+  data: {
+    labels: {{ trend_data.labels | tojson | safe }},
+    datasets: [{
+      label: 'Mentions Over Time',
+      data: {{ trend_data.data | tojson | safe }},
+      borderColor: '#4F46E5',
+      tension: 0.2,
+      fill: false,
+    }]
+  },
+  options: {
+    plugins: {
+      title: {
+        display: true,
+        text: '{{ total_articles }} Mentions',
+        font: {
+          size: 18
+        }
+      }
     }
-  });
-
+  }
+});
   // Word Cloud
   const words = {{ wordcloud_data | tojson | safe }};
   d3.layout.cloud()
