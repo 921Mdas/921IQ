@@ -14,6 +14,11 @@ def convert_date(date_string):
     if isinstance(date_string, datetime):
         return date_string.date()
 
+    if not date_string or not isinstance(date_string, str):
+        return None
+
+    date_string = date_string.strip().lower()
+
     # Try RFI format: '20/05/2025'
     try:
         return datetime.strptime(date_string, "%d/%m/%Y").date()
@@ -22,12 +27,16 @@ def convert_date(date_string):
 
     # Try Actu format: '20 mai 2025'
     try:
-        day, month, year = date_string.split()
-        english_month = month_translation.get(month.lower(), month)
+        parts = date_string.split()
+        if len(parts) != 3:
+            return None
+
+        day, month, year = parts
+        english_month = month_translation.get(month, month)
         date_string_english = f"{day} {english_month} {year}"
         return datetime.strptime(date_string_english, "%d %B %Y").date()
     except Exception:
-        return None  # return None if both formats fail
+        return None
 
 
 def testSoup(url):

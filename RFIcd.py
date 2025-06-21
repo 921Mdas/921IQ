@@ -19,12 +19,16 @@ def RFICdScrap(page):
             metadata_div = article.find('div', class_='article__metadata')
             if not metadata_div:
                 continue
+
             time_tag = metadata_div.find('time')
             if not time_tag:
                 continue
 
             raw_date = time_tag.get_text(strip=True)
-            date = convert_date(raw_date)
+            date = convert_date(raw_date)  # Fixed here: was convert_date(date_tag.text.strip())
+            if date is None:
+                # Optionally log that date conversion failed
+                continue
 
             title_tag = article.select_one('h2')
             if not title_tag or not title_tag.text.strip():
@@ -41,9 +45,9 @@ def RFICdScrap(page):
                 'title': title,
                 'url': url,
                 'source_name': 'RFI',
-                'source_logo': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFSKPQwi6ZtYU92JwnoJXgYTYXj0jcr9fGUQ&s' 
+                'country': 'France',
+                'source_logo': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFSKPQwi6ZtYU92JwnoJXgYTYXj0jcr9fGUQ&s'
             })
-
 
         runDB(actu_news)
 

@@ -3,7 +3,8 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from helper import extract_keywords
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
+
 
 app = Flask(__name__)
 
@@ -72,23 +73,58 @@ def home():
         """, params + [offset, per_page])
         articles = cursor.fetchall()
 
-        # All filtered article dates (for trend data)
+#         # All filtered article dates (for trend data)
+#         cursor.execute(f"""
+#             SELECT date FROM articles
+#             WHERE {where_clause};
+#         """, params)
+#         all_dates = [row["date"] for row in cursor.fetchall()]
+#         month_counts = Counter(
+#     datetime.fromisoformat(date).strftime("%b %Y") for date in all_dates
+# )
+
+
+#         sorted_months = sorted(
+#             month_counts.keys(),
+#             key=lambda m: datetime.strptime(m, "%b %Y")
+#         )
+
+#         trend_data = {
+#             "labels": sorted_months,
+#             "data": [month_counts[month] for month in sorted_months]
+#         }
+
+# All filtered article dates (for trend data)
         cursor.execute(f"""
             SELECT date FROM articles
             WHERE {where_clause};
         """, params)
         all_dates = [row["date"] for row in cursor.fetchall()]
-        month_counts = Counter(date.strftime("%b %Y") for date in all_dates)
 
-        sorted_months = sorted(
-            month_counts.keys(),
-            key=lambda m: datetime.strptime(m, "%b %Y")
+        # Convert ISO date to datetime
+        date_objs = [datetime.fromisoformat(date) for date in all_dates]
+
+        # Helper to get start of the week (Monday)
+        def week_start(date):
+            start = date - timedelta(days=date.weekday())
+            end = start + timedelta(days=6)
+            return f"{start.strftime('%b %d')}–{end.strftime('%b %d')}"
+
+        # Count mentions per week
+        week_counts = Counter(week_start(date) for date in date_objs)
+
+        # Sort weeks chronologically by actual date
+        sorted_weeks = sorted(
+            week_counts.keys(),
+            key=lambda label: datetime.strptime(label.split("–")[0], "%b %d")
         )
 
+        # Create trend data
         trend_data = {
-            "labels": sorted_months,
-            "data": [month_counts[month] for month in sorted_months]
-        }
+            "labels": sorted_weeks,
+            "data": [week_counts[week] for week in sorted_weeks]
+}
+
 
         # All filtered titles (for wordcloud)
         cursor.execute(f"""
@@ -98,21 +134,51 @@ def home():
         all_titles = [row["title"] for row in cursor.fetchall()]
         wordcloud_data = extract_keywords(all_titles)
 
-        # Dummy share of voice (replace with real logic if needed)
-        share_of_voice = {
-            "labels": ["Brand A", "Brand B", "Brand C"],
-            "data": [35, 45, 20]
+        # Top Publications (by source_name)
+        cursor.execute(f"""
+            SELECT source_name, COUNT(*) as count
+            FROM articles
+            WHERE {where_clause}
+            GROUP BY source_name
+            ORDER BY count DESC
+            LIMIT 10;
+        """, params)
+        top_publications_result = cursor.fetchall()
+
+        top_publications = {
+            "labels": [row["source_name"] for row in top_publications_result],
+            "data": [row["count"] for row in top_publications_result]
         }
 
+        #top countries
+        cursor.execute(f"""
+            SELECT country, COUNT(*) as count
+            FROM articles
+            WHERE {where_clause}
+            GROUP BY country
+            ORDER BY count DESC
+            LIMIT 10;
+        """, params)
+
+        top_countries_result = cursor.fetchall()
+
+        # Prepare for chart or map use
+        top_countries = [
+            {"country": row["country"], "count": row["count"]}
+            for row in top_countries_result
+        ]
+
+        
         return render_template(
             "index.html",
             articles=articles,
-            share_of_voice=share_of_voice,
+            top_publications=top_publications,
             trend_data=trend_data,
             wordcloud_data=wordcloud_data,
             current_page=page,
             total_pages=total_pages,
-            total_articles=total_articles  # 👈 Add this
+            total_articles=total_articles,
+            top_countries = top_countries
         )
 
     except Exception as e:
