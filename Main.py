@@ -2,6 +2,7 @@ from playwright.sync_api import sync_playwright
 from RFIcd import RFICdScrap
 from Actucd import ActuCdScrap
 
+
 def run_scrapers():
     try:
         with sync_playwright() as p:
@@ -24,3 +25,4 @@ def run_scrapers():
 
 if __name__ == "__main__":
     run_scrapers()
+

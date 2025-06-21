@@ -27,7 +27,6 @@
  
   </form>
 </div>
-
 <script>
   // Store references for all wrappers to rebuild tags on load
   const wrappers = Array.from(document.querySelectorAll('.tags-input'));
@@ -41,14 +40,14 @@
 
   // Initialize tag inputs with add/remove functionality
   wrappers.forEach(wrapper => {
-    const type = wrapper.dataset.type;  // and, or, not
+    const type = wrapper.dataset.type;
     const input = wrapper.querySelector('input');
     const tagContainer = wrapper.querySelector('.tags');
-
-    const keywords = allKeywords[type];  // bind to allKeywords[type]
+    const keywords = allKeywords[type];
 
     function addTag(value) {
       if (!value || keywords.includes(value)) return;
+
       keywords.push(value);
 
       const tag = document.createElement('span');
@@ -61,6 +60,15 @@
       removeBtn.onclick = () => {
         tagContainer.removeChild(tag);
         keywords.splice(keywords.indexOf(value), 1);
+
+        const totalRemaining =
+          allKeywords.and.length +
+          allKeywords.or.length +
+          allKeywords.not.length;
+
+        if (totalRemaining === 0) {
+          window.location.href = window.location.pathname;
+        }
       };
 
       tag.appendChild(removeBtn);
@@ -76,13 +84,12 @@
     });
 
     input.addEventListener('blur', () => {
-  if (input.value.trim()) {
-    addTag(input.value.trim());
-    input.value = '';
-  }
-});
+      if (input.value.trim()) {
+        addTag(input.value.trim());
+        input.value = '';
+      }
+    });
 
-    // Method to get current keywords
     wrapper.getKeywords = () => [...keywords];
   });
 
@@ -97,45 +104,35 @@
     };
 
     const params = new URLSearchParams();
-
     query.and.forEach(kw => params.append("and", kw));
     query.or.forEach(kw => params.append("or", kw));
     query.not.forEach(kw => params.append("not", kw));
 
-    // Redirect to the same page with query params
     window.location.href = `/?${params.toString()}`;
   });
 
-  // --- On page load, restore tags from URL params ---
+  // Restore tags from URL params on load
   function restoreTagsFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
 
-    // Clear existing keywords (in case)
+    // Clear existing keywords and tags
     allKeywords.and.length = 0;
     allKeywords.or.length = 0;
     allKeywords.not.length = 0;
 
-    // Clear all tag containers visually
     wrappers.forEach(wrapper => {
       wrapper.querySelector('.tags').innerHTML = '';
     });
 
-    // Helper to restore tags for a type
     function restore(type) {
       const values = urlParams.getAll(type);
       const wrapper = wrappers.find(w => w.dataset.type === type);
-      if (!wrapper) return;
+      const tagContainer = wrapper.querySelector('.tags');
 
       values.forEach(value => {
-        // Add visually and in the array
-        const input = wrapper.querySelector('input');
-        wrapper.querySelector('.tags').innerHTML += ''; // just to confirm clear done above
-        // Use the same addTag logic:
-        // (re-implement addTag here since closure is lost)
         if (value && !allKeywords[type].includes(value)) {
           allKeywords[type].push(value);
 
-          const tagContainer = wrapper.querySelector('.tags');
           const tag = document.createElement('span');
           tag.className = 'tag';
           tag.textContent = value;
@@ -146,6 +143,15 @@
           removeBtn.onclick = () => {
             tagContainer.removeChild(tag);
             allKeywords[type].splice(allKeywords[type].indexOf(value), 1);
+
+            const totalRemaining =
+              allKeywords.and.length +
+              allKeywords.or.length +
+              allKeywords.not.length;
+
+            if (totalRemaining === 0) {
+              window.location.href = window.location.pathname;
+            }
           };
 
           tag.appendChild(removeBtn);
@@ -159,27 +165,24 @@
     restore('not');
   }
 
-  // Run restore on page load
+  // Run on page load
   restoreTagsFromURL();
 
+  // Clear all tags and reload the page
+  document.getElementById('clearAllBtn').addEventListener('click', () => {
+    allKeywords.and.length = 0;
+    allKeywords.or.length = 0;
+    allKeywords.not.length = 0;
 
+    wrappers.forEach(wrapper => {
+      wrapper.querySelector('.tags').innerHTML = '';
+      wrapper.querySelector('input').value = '';
+    });
 
-document.getElementById('clearAllBtn').addEventListener('click', () => {
-  // Optionally clear local keyword state before reload
-  allKeywords.and.length = 0;
-  allKeywords.or.length = 0;
-  allKeywords.not.length = 0;
-
-  // You can also clear the tag DOMs if you want immediate visual effect before reload
-  wrappers.forEach(wrapper => {
-    wrapper.querySelector('.tags').innerHTML = '';
-    wrapper.querySelector('input').value = '';
+    window.location.href = window.location.pathname;
   });
-
-  // Reload the page without any query params
-  window.location.href = window.location.pathname;
-});
 </script>
+
 
 <style>
   /* Simple styles for tags */

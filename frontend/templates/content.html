@@ -9,33 +9,34 @@
           <!-- Articles will be rendered here by JS -->
         </ul>
 
-       <!-- Pagination bar -->
-            <div class="pagination">
-                  {% macro preserve_keywords(page) -%}
-                    {{ url_for('home', page=page) }}
-                    {% for kw in request.args.getlist('and') %}&and={{ kw }}{% endfor %}
-                    {% for kw in request.args.getlist('or') %}&or={{ kw }}{% endfor %}
-                    {% for kw in request.args.getlist('not') %}&not={{ kw }}{% endfor %}
-                  {%- endmacro %}
+        <!-- Pagination bar -->
+        <div class="pagination">
+          {% macro preserve_keywords(page) -%}
+            {{ url_for('home', page=page) }}
+            {% for kw in request.args.getlist('and') %}&and={{ kw }}{% endfor %}
+            {% for kw in request.args.getlist('or') %}&or={{ kw }}{% endfor %}
+            {% for kw in request.args.getlist('not') %}&not={{ kw }}{% endfor %}
+          {%- endmacro %}
 
-                  {% if current_page > 1 %}
-                <a href="{{ preserve_keywords(current_page - 1) }}" class="page-link">Previous</a>
-                  {% endif %}
+          {% if current_page > 1 %}
+            <a href="{{ preserve_keywords(current_page - 1) }}" class="page-link">Previous</a>
+          {% endif %}
 
-                  {% for page_num in range(1, total_pages + 1) %}
-                <a href="{{ preserve_keywords(page_num) }}"
-                  class="page-link {% if page_num == current_page %}active{% endif %}">
-                  {{ page_num }}
-                </a>
-                  {% endfor %}
+          {% for page_num in range(1, total_pages + 1) %}
+            <a href="{{ preserve_keywords(page_num) }}"
+               class="page-link {% if page_num == current_page %}active{% endif %}">
+              {{ page_num }}
+            </a>
+          {% endfor %}
 
-                  {% if current_page < total_pages %}
-                <a href="{{ preserve_keywords(current_page + 1) }}" class="page-link">Next</a>
-                  {% endif %}
-            </div>
+          {% if current_page < total_pages %}
+            <a href="{{ preserve_keywords(current_page + 1) }}" class="page-link">Next</a>
+          {% endif %}
+        </div>
       </div>
-      
-     <button class="hamburger-toggle" onclick="toggleAnalytics()">☰</button>
+
+      <button class="hamburger-toggle" onclick="toggleAnalytics()">☰</button>
+
       <!-- Widgets Section -->
       <div class="analytics">
         {% include 'dashboard.html' %}
@@ -74,7 +75,7 @@
 
   function renderResults(query, articles) {
     const list = document.querySelector('.article-list');
-    list.innerHTML = ''; // Clear existing content
+    list.innerHTML = '';
 
     if (!articles || articles.length === 0) {
       list.innerHTML = '<p>No articles found.</p>';
@@ -107,13 +108,9 @@
   }
 
   window.SearchStore.onUpdate(renderResults);
-  // Initial render on page load
   renderResults(window.SearchStore.query, window.SearchStore.articles);
 
-
-
-  //toggle menu
-   function toggleAnalytics() {
+  function toggleAnalytics() {
     const panel = document.querySelector('.analytics');
     panel.classList.toggle('active');
   }
