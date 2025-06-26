@@ -5,6 +5,16 @@
     <div class="responsive-container">
       <!-- Articles Section -->
       <div class="articles-column">
+        <!-- Summary Section -->
+        <div class="summary-container">
+          <div class="skeleton-loader">
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+          </div>
+          <div id="ai-summary" style="display: none;"></div>
+        </div>
+
         <ul class="article-list">
           <!-- Articles will be rendered here by JS -->
         </ul>
@@ -35,7 +45,7 @@
         </div>
       </div>
 
-      <button class="hamburger-toggle" onclick="toggleAnalytics()">☰</button>
+      <button class="hamburger-toggle" onclick="store.toggleAnalytics()">☰</button>
 
       <!-- Widgets Section -->
       <div class="analytics">
@@ -45,73 +55,121 @@
   </div>
 </div>
 
-<script>
-  window.SearchStore = {
-    query: { and: [], or: [], not: [] },
-    articles: [],
-    subscribers: [],
+<script type="module">
+  import store from "{{ url_for('static', filename='js/store.js') }}";
 
-    setQuery(query) {
-      this.query = query;
-      this.notify();
-    },
+// Parse keywords from URL and populate store.query
+function extractKeywordsFromURL() {
+  const urlParams = new URLSearchParams(window.location.search);
 
-    setResults(results) {
-      this.articles = results;
-      this.notify();
-    },
-
-    onUpdate(callback) {
-      this.subscribers.push(callback);
-    },
-
-    notify() {
-      this.subscribers.forEach(fn => fn(this.query, this.articles));
-    }
+  const query = {
+    and: urlParams.getAll("and"),
+    or: urlParams.getAll("or"),
+    not: urlParams.getAll("not"),
   };
 
-  window.initialArticles = {{ articles | tojson }};
-  window.SearchStore.articles = window.initialArticles;
+  store.setQuery(query);
+}
 
-  function renderResults(query, articles) {
+extractKeywordsFromURL()
+  
+  // // Initialize with server-side data
+  // store.setArticles({{ articles | tojson }});
+
+// Always clear articles on fresh page load
+store.setArticles([]);
+
+// Check if there's at least one keyword in the query
+const query = store.state.query;
+
+
+
+const hasKeywords =
+  query.and.length > 0 ||
+  query.or.length > 0 ||
+  query.not.length > 0;
+
+if (hasKeywords) {
+
+  store.setArticles({{ articles | tojson }});
+  // Load initial server-side articles only if there's a keyword
+}
+
+
+  
+  // Render articles
+  function renderArticles(state) {
     const list = document.querySelector('.article-list');
     list.innerHTML = '';
-
-    if (!articles || articles.length === 0) {
+    
+    if (!state.articles || state.articles.length === 0) {
       list.innerHTML = '<p>No articles found.</p>';
       return;
     }
-
-    articles.forEach(article => {
+    
+    state.articles.forEach(article => {
+      
       const li = document.createElement('li');
       li.className = 'article-card';
-
       const imgSrc = article.source_logo || '/static/Images/news-icon.png';
       const safeDate = article.date ? new Date(article.date).toLocaleDateString() : '';
 
       li.innerHTML = `
-        <img
-          src="${imgSrc}"
-          alt="${article.source_name || 'News icon'}"
-          class="article-image"
-          onerror="this.onerror=null; this.src='/static/Images/news-icon.png';"
-        />
+        <img src="${imgSrc}"
+             alt="${article.source_name || 'News icon'}"
+             class="article-image"
+             onerror="this.onerror=null; this.src='/static/Images/news-icon.png'">
         <div class="article-info">
           <a href="${article.url}" target="_blank" class="article-title">${article.title}</a>
           <div class="article-date">${safeDate}</div>
           <div class="source-name">${article.source_name || '<span class="missing">No source_name found</span>'}</div>
         </div>
       `;
-
       list.appendChild(li);
     });
   }
 
-  window.SearchStore.onUpdate(renderResults);
-  renderResults(window.SearchStore.query, window.SearchStore.articles);
-
-  function toggleAnalytics() {
-    const panel = document.querySelector('.analytics');
-    panel.classList.toggle('active');
+  // Render summary
+  function renderSummary(state) {
+    const summaryEl = document.getElementById('ai-summary');
+    const skeleton = document.querySelector('.skeleton-loader');
+    
+    if (state.summary) {
+      summaryEl.textContent = state.summary;
+      summaryEl.style.display = 'block';
+      skeleton.style.display = 'none';
+    }
   }
+
+  // Toggle analytics panel
+  function renderAnalytics(state) {
+    const panel = document.querySelector('.analytics');
+    panel.classList.toggle('active', state.analyticsVisible);
+  }
+
+  // Subscribe to store changes
+  store.subscribe((state) => {
+    renderArticles(state);
+    renderSummary(state);
+    renderAnalytics(state);
+  });
+
+  // Load AI summary
+  document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    try {
+      const response = await fetch(`/get-summary?${params.toString()}`);
+      if (!response.ok) throw new Error('Network error');
+      const data = await response.json();
+      if (data.summary) store.setSummary(data.summary);
+    } catch (error) {
+      console.error('Summary load failed:', error);
+      const skeleton = document.querySelector('.skeleton-loader');
+      skeleton.textContent = 'Summary unavailable';
+      skeleton.style.backgroundColor = '#ffeeee';
+    }
+  });
+
+  // For debugging
+  window.store = store;
 </script>
