@@ -1,6 +1,5 @@
 <div class="search-bar-container">
   <form id="searchForm">
-
     <!-- AND -->
     <div class="search-bar-wrapper tags-input" data-type="and">
       <div class="tags"></div>
@@ -23,22 +22,21 @@
       <button type="button" id="clearAllBtn" class="modern-button-danger danger">Clear</button>
       <button type="submit" class="modern-button">Search</button>
     </div>
-
- 
   </form>
 </div>
-<script>
-  // Store references for all wrappers to rebuild tags on load
+
+<script type="module">
+  import store from '/static/js/store.js'; // adjust path if needed
+
   const wrappers = Array.from(document.querySelectorAll('.tags-input'));
 
-  // This will store the keywords for each wrapper by type
+  // ✅ FIXED variable name
   const allKeywords = {
     and: [],
     or: [],
     not: []
   };
 
-  // Initialize tag inputs with add/remove functionality
   wrappers.forEach(wrapper => {
     const type = wrapper.dataset.type;
     const input = wrapper.querySelector('input');
@@ -93,29 +91,47 @@
     wrapper.getKeywords = () => [...keywords];
   });
 
-  // On form submit, serialize keywords and redirect
-  document.getElementById('searchForm').addEventListener('submit', function (e) {
-    e.preventDefault();
+  // Form submission: serialize keywords and update store
+document.getElementById('searchForm').addEventListener('submit', function (e) {
+  e.preventDefault();
 
-    const query = {
-      and: wrappers.find(w => w.dataset.type === 'and').getKeywords(),
-      or: wrappers.find(w => w.dataset.type === 'or').getKeywords(),
-      not: wrappers.find(w => w.dataset.type === 'not').getKeywords()
-    };
+  const newQuery = {
+    and: wrappers.find(w => w.dataset.type === 'and').getKeywords(),
+    or: wrappers.find(w => w.dataset.type === 'or').getKeywords(),
+    not: wrappers.find(w => w.dataset.type === 'not').getKeywords()
+  };
 
-    const params = new URLSearchParams();
-    query.and.forEach(kw => params.append("and", kw));
-    query.or.forEach(kw => params.append("or", kw));
-    query.not.forEach(kw => params.append("not", kw));
+  const existingQuery = store.state.query;
 
-    window.location.href = `/?${params.toString()}`;
-  });
+  // Merge without duplicates
+  const mergedQuery = {
+    and: Array.from(new Set([...existingQuery.and, ...newQuery.and])),
+    or: Array.from(new Set([...existingQuery.or, ...newQuery.or])),
+    not: Array.from(new Set([...existingQuery.not, ...newQuery.not]))
+  };
 
-  // Restore tags from URL params on load
+  const params = new URLSearchParams();
+  mergedQuery.and.forEach(kw => params.append("and", kw));
+  mergedQuery.or.forEach(kw => params.append("or", kw));
+  mergedQuery.not.forEach(kw => params.append("not", kw));
+
+  store.setQuery(mergedQuery); // ✅ Save merged query to store
+
+  console.log('xxy', store.state)
+
+
+  fetch(`/?${params.toString()}`)
+    .then(response => response.text())
+    .then(html => {
+      // ✅ Navigate to search results
+      window.location.href = `/?${params.toString()}`;
+    });
+});
+
+  // Restore tags on page load
   function restoreTagsFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
 
-    // Clear existing keywords and tags
     allKeywords.and.length = 0;
     allKeywords.or.length = 0;
     allKeywords.not.length = 0;
@@ -165,10 +181,10 @@
     restore('not');
   }
 
-  // Run on page load
+  // Initial load
   restoreTagsFromURL();
 
-  // Clear all tags and reload the page
+  // Clear button
   document.getElementById('clearAllBtn').addEventListener('click', () => {
     allKeywords.and.length = 0;
     allKeywords.or.length = 0;
@@ -183,9 +199,7 @@
   });
 </script>
 
-
 <style>
-  /* Simple styles for tags */
   .tag {
     display: inline-block;
     background: #9e9e9e;

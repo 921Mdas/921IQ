@@ -1,12 +1,17 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from helper import extract_keywords
+from helper import  build_where_clause
 from collections import Counter
 from datetime import datetime, timedelta
+from AI import summarize_titles
 
 
 app = Flask(__name__)
+CORS(app)  # Allow all origins (for development only)
+
 
 def get_db_connection():
     return psycopg2.connect(
@@ -26,6 +31,20 @@ def home():
         and_keywords = request.args.getlist("and")
         or_keywords = request.args.getlist("or")
         not_keywords = request.args.getlist("not")
+
+        #  # 🔒 Reject empty queries early
+        # if not (and_keywords or or_keywords or not_keywords):
+        #     return render_template(
+        #         "index.html",
+        #         articles=[],
+        #         top_publications={"labels": [], "data": []},
+        #         trend_data={"labels": [], "data": []},
+        #         wordcloud_data=[],
+        #         current_page=1,
+        #         total_pages=0,
+        #         total_articles=0,
+        #         top_countries=[],
+        #     )
 
         # Pagination
         page = int(request.args.get("page", 1))
@@ -73,26 +92,6 @@ def home():
         """, params + [offset, per_page])
         articles = cursor.fetchall()
 
-#         # All filtered article dates (for trend data)
-#         cursor.execute(f"""
-#             SELECT date FROM articles
-#             WHERE {where_clause};
-#         """, params)
-#         all_dates = [row["date"] for row in cursor.fetchall()]
-#         month_counts = Counter(
-#     datetime.fromisoformat(date).strftime("%b %Y") for date in all_dates
-# )
-
-
-#         sorted_months = sorted(
-#             month_counts.keys(),
-#             key=lambda m: datetime.strptime(m, "%b %Y")
-#         )
-
-#         trend_data = {
-#             "labels": sorted_months,
-#             "data": [month_counts[month] for month in sorted_months]
-#         }
 
 # All filtered article dates (for trend data)
         cursor.execute(f"""
@@ -168,6 +167,10 @@ def home():
             for row in top_countries_result
         ]
 
+        # Generate summary of titles
+        all_titles = [article["title"] for article in articles]
+        titles_summary = summarize_titles(all_titles)
+
         
         return render_template(
             "index.html",
@@ -178,7 +181,7 @@ def home():
             current_page=page,
             total_pages=total_pages,
             total_articles=total_articles,
-            top_countries = top_countries
+            top_countries = top_countries,
         )
 
     except Exception as e:
@@ -191,5 +194,77 @@ def home():
             conn.close()
 
 
+# @app.route("/get-summary", methods=["GET"])
+# def get_summary():
+#     conn = None
+#     cursor = None
+#     try:
+#         # Reuse the same filtering logic
+#         where_clause, params = build_where_clause(request)
+        
+#         conn = get_db_connection()
+#         cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+#         cursor.execute(f"""
+#             SELECT title FROM articles
+#             WHERE {where_clause}
+#             ORDER BY date DESC
+#             LIMIT 100;  # Get most recent 100 titles
+#         """, params)
+        
+#         titles = [row["title"] for row in cursor.fetchall()]
+#         summary = summarize_titles(titles)
+
+#         print('summary is ready', summary)
+        
+#         return jsonify({
+#             "summary": summary,
+#             "count": len(titles)
+#         })
+        
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         if cursor: cursor.close()
+#         if conn: conn.close()
+
+
+@app.route("/get-summary", methods=["GET"])
+def get_summary():
+    conn = None
+    cursor = None
+    try:
+         # 🔒 Reject summary requests with no query
+        # if not (request.args.getlist("and") or request.args.getlist("or") or request.args.getlist("not")):
+        #     return jsonify({"summary": "No query provided", "count": 0})
+        
+        where_clause, params = build_where_clause(request)
+        print(f"Executing query with WHERE: {where_clause}")  # Debug log
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute(f"SELECT title FROM articles WHERE {where_clause} ORDER BY date DESC LIMIT 5;", params)
+        
+        titles = [row["title"] for row in cursor.fetchall()]
+        print(f"Found {len(titles)} titles")  # Debug log
+        
+        if not titles:
+            return jsonify({"summary": "No matching articles found", "count": 0})
+            
+        summary = summarize_titles(titles)
+        print('Generated summary:', summary)  # Debug log
+        
+        return jsonify({
+            "summary": summary,
+            "count": len(titles)
+        })
+ 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
