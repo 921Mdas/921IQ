@@ -5,7 +5,8 @@ class SearchStore {
       query: { and: [], or: [], not: [] },
       articles: [],
       summary: null,
-      analyticsVisible: false
+      analyticsVisible: false,
+      paginationVisible: false // NEW
     };
     this.subscribers = [];
   }
@@ -14,7 +15,6 @@ class SearchStore {
     return this._state;
   }
 
-  // Utility method to check if query has any keyword
   _hasKeywords() {
     const { and, or, not } = this._state.query;
     return and.length > 0 || or.length > 0 || not.length > 0;
@@ -44,9 +44,20 @@ class SearchStore {
     this._notify();
   }
 
+  // ✅ New explicit setter for analytics visibility
+  setAnalyticsVisible(value) {
+    this._state.analyticsVisible = value;
+    this._notify();
+  }
+
+  // ✅ New setter for pagination
+  setPaginationVisible(value) {
+    this._state.paginationVisible = value;
+    this._notify();
+  }
+
   subscribe(callback) {
     this.subscribers.push(callback);
-    // Immediately notify new subscriber with current state
     callback(this._state);
   }
 
@@ -54,7 +65,6 @@ class SearchStore {
     this.subscribers.forEach(cb => cb(this._state));
   }
 
-  // Return placeholder articles when no keywords are present
   _getMockArticles() {
     return [{
       id: 'mock-1',
@@ -65,6 +75,5 @@ class SearchStore {
   }
 }
 
-// Export a singleton instance
 const storeInstance = new SearchStore();
 export default storeInstance;

@@ -6,170 +6,34 @@
       <!-- Articles Section -->
       <div class="articles-column">
         <!-- Summary Section -->
-        <div class="summary-container">
-          <div class="skeleton-loader">
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line"></div>
-          </div>
-          <div id="ai-summary" style="display: none;"></div>
-        </div>
+        {% include 'partials/summary.html' %}
 
+        <!-- Article List -->
         <ul class="article-list">
-          <!-- Articles will be rendered here by JS -->
+          <!-- Articles will be rendered by JS -->
         </ul>
 
-        <!-- Pagination bar -->
-        <div class="pagination">
-          {% macro preserve_keywords(page) -%}
-            {{ url_for('home', page=page) }}
-            {% for kw in request.args.getlist('and') %}&and={{ kw }}{% endfor %}
-            {% for kw in request.args.getlist('or') %}&or={{ kw }}{% endfor %}
-            {% for kw in request.args.getlist('not') %}&not={{ kw }}{% endfor %}
-          {%- endmacro %}
-
-          {% if current_page > 1 %}
-            <a href="{{ preserve_keywords(current_page - 1) }}" class="page-link">Previous</a>
-          {% endif %}
-
-          {% for page_num in range(1, total_pages + 1) %}
-            <a href="{{ preserve_keywords(page_num) }}"
-               class="page-link {% if page_num == current_page %}active{% endif %}">
-              {{ page_num }}
-            </a>
-          {% endfor %}
-
-          {% if current_page < total_pages %}
-            <a href="{{ preserve_keywords(current_page + 1) }}" class="page-link">Next</a>
-          {% endif %}
-        </div>
+        <!-- Pagination Controls -->
+        {% include 'partials/pagination.html' %}
       </div>
 
+      <!-- Toggle Analytics -->
       <button class="hamburger-toggle" onclick="store.toggleAnalytics()">☰</button>
 
-      <!-- Widgets Section -->
+      <!-- Analytics Panel -->
       <div class="analytics">
         {% include 'dashboard.html' %}
       </div>
+
+
     </div>
   </div>
 </div>
 
-<script type="module">
-  import store from "{{ url_for('static', filename='js/store.js') }}";
+<script>
+  window.__INITIAL_ARTICLES__ = {{ articles | tojson }};
+</script>
 
-// Parse keywords from URL and populate store.query
-function extractKeywordsFromURL() {
-  const urlParams = new URLSearchParams(window.location.search);
-
-  const query = {
-    and: urlParams.getAll("and"),
-    or: urlParams.getAll("or"),
-    not: urlParams.getAll("not"),
-  };
-
-  store.setQuery(query);
-}
-
-extractKeywordsFromURL()
-  
-  // // Initialize with server-side data
-  // store.setArticles({{ articles | tojson }});
-
-// Always clear articles on fresh page load
-store.setArticles([]);
-
-// Check if there's at least one keyword in the query
-const query = store.state.query;
-
-
-
-const hasKeywords =
-  query.and.length > 0 ||
-  query.or.length > 0 ||
-  query.not.length > 0;
-
-if (hasKeywords) {
-
-  store.setArticles({{ articles | tojson }});
-  // Load initial server-side articles only if there's a keyword
-}
-
-
-  
-  // Render articles
-  function renderArticles(state) {
-    const list = document.querySelector('.article-list');
-    list.innerHTML = '';
-    
-    if (!state.articles || state.articles.length === 0) {
-      list.innerHTML = '<p>No articles found.</p>';
-      return;
-    }
-    
-    state.articles.forEach(article => {
-      
-      const li = document.createElement('li');
-      li.className = 'article-card';
-      const imgSrc = article.source_logo || '/static/Images/news-icon.png';
-      const safeDate = article.date ? new Date(article.date).toLocaleDateString() : '';
-
-      li.innerHTML = `
-        <img src="${imgSrc}"
-             alt="${article.source_name || 'News icon'}"
-             class="article-image"
-             onerror="this.onerror=null; this.src='/static/Images/news-icon.png'">
-        <div class="article-info">
-          <a href="${article.url}" target="_blank" class="article-title">${article.title}</a>
-          <div class="article-date">${safeDate}</div>
-          <div class="source-name">${article.source_name || '<span class="missing">No source_name found</span>'}</div>
-        </div>
-      `;
-      list.appendChild(li);
-    });
-  }
-
-  // Render summary
-  function renderSummary(state) {
-    const summaryEl = document.getElementById('ai-summary');
-    const skeleton = document.querySelector('.skeleton-loader');
-    
-    if (state.summary) {
-      summaryEl.textContent = state.summary;
-      summaryEl.style.display = 'block';
-      skeleton.style.display = 'none';
-    }
-  }
-
-  // Toggle analytics panel
-  function renderAnalytics(state) {
-    const panel = document.querySelector('.analytics');
-    panel.classList.toggle('active', state.analyticsVisible);
-  }
-
-  // Subscribe to store changes
-  store.subscribe((state) => {
-    renderArticles(state);
-    renderSummary(state);
-    renderAnalytics(state);
-  });
-
-  // Load AI summary
-  document.addEventListener('DOMContentLoaded', async () => {
-    const params = new URLSearchParams(window.location.search);
-    try {
-      const response = await fetch(`/get-summary?${params.toString()}`);
-      if (!response.ok) throw new Error('Network error');
-      const data = await response.json();
-      if (data.summary) store.setSummary(data.summary);
-    } catch (error) {
-      console.error('Summary load failed:', error);
-      const skeleton = document.querySelector('.skeleton-loader');
-      skeleton.textContent = 'Summary unavailable';
-      skeleton.style.backgroundColor = '#ffeeee';
-    }
-  });
-
-  // For debugging
-  window.store = store;
+<script type="module" src="{{ url_for('static', filename='js/contentPage.js') }}">
+    store.setArticles(window.__INITIAL_ARTICLES__ || []);
 </script>
