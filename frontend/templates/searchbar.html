@@ -156,8 +156,6 @@ document.getElementById('searchForm').addEventListener('submit', function (e) {
 
   store.setQuery(mergedQuery); // ✅ Save merged query to store
 
-  console.log('xxy', store.state)
-
 
   fetch(`/?${params.toString()}`)
     .then(response => response.text())
