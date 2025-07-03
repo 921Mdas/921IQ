@@ -1,0 +1,45 @@
+.Aside {
+  background-color: #fff;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  nav {
+    .menu_list {
+      list-style: none;
+      margin: 0;
+      padding-top: 1em;
+
+      li {
+        margin-bottom: 2em;
+
+        .menu-link {
+          display: flex;
+          align-items: center;
+          text-decoration: none;
+          color: #666666; // grey text color
+          font-weight: 500;
+          font-size: 16px;
+          transition: color 0.3s ease;
+
+          .icon {
+            display: flex;
+            align-items: center;
+            margin-right: 12px;
+            color: #888888; // slightly lighter grey for icons
+            font-size: 22px;
+            transition: color 0.3s ease;
+          }
+
+          &:hover,
+          &.active {
+            color: var(--color-primary); // darker grey on hover/active
+            .icon {
+              color: var(--color-primary);
+            }
+          }
+        }
+      }
+    }
+  }
+}

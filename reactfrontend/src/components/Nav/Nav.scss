@@ -1,0 +1,35 @@
+@import '../../styles/layout.scss';
+
+
+.Nav{
+  @include flex(row,space-between, center, 10px);
+}
+
+
+.logo {
+  @include flex(row, center, center); // horizontal row, center vertically
+
+  gap: 6px; // small horizontal spacing
+
+  .logo_icon {
+    border: solid 2px var(--color-gray-100);
+    display: flex;
+    align-items: center; // ensures icon is vertically centered
+  }
+
+  .logo_text {
+    font-weight: bold;
+    border: solid 2px var(--color-gray-100);
+    display: flex;
+    align-items: center; // ensures text is vertically centered
+    padding: 0 2px;
+  }
+
+}
+
+
+@media (max-width: 768px) {
+   .user{
+    display: none;
+   }
+}

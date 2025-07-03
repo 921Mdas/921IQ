@@ -1,0 +1,41 @@
+@use '../../Content.scss' as *;
+
+
+.boolean-search-form {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: stretch;  /* changed from center to stretch */
+  max-width: inherit;
+  width: inherit; /* make sure it grows to parent width */
+  margin: 0;
+
+}
+
+.boolean-search-form > * {
+  height: 100%; /* make each grid item fill the height */
+}
+
+.buttons-container {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 2px !important;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .boolean-search-form {
+    grid-template-columns: 1fr !important;
+  }
+  .buttons-container {
+    justify-content: center;
+    gap: 12px;
+  }
+  .buttons-container button {
+    flex: 1 1 45%;
+    min-width: 120px;
+  }
+}

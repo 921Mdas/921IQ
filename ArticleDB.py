@@ -13,6 +13,17 @@ def runDB(data: list):
         cursor = conn.cursor()
         print("✅ Database connection established successfully!")
 
+        cur = conn.cursor()
+        cur.execute("SELECT current_database();")
+        db_name = cur.fetchone()[0]
+        print(f"Connected to database: {db_name}")
+
+        cur.execute("SELECT COUNT(*) FROM articles;")
+        count = cur.fetchone()[0]
+        print(f"Number of articles in the table: {count}")
+
+        cur.close()
+
         new_article_count = 0
         updated_article_count = 0
 

@@ -1,0 +1,353 @@
+
+import "./Search.scss";
+import React, { useState, useEffect, useCallback } from "react";
+import { TextField, Chip, Box, Button } from "@mui/material";
+import { useSearchStore } from "../../../../store";
+import { api } from "../../../../api";
+
+function BooleanSearch() {
+  const [keywords, setKeywords] = useState({ and: [], or: [], not: [] });
+  const [inputs, setInputs] = useState({ and: "", or: "", not: "" });
+
+const removeTag = useCallback((type, value) => {
+  setKeywords(prev => {
+    const updated = {
+      ...prev,
+      [type]: prev[type].filter(v => v !== value)
+    };
+    return updated;
+  });
+}, []);
+
+
+
+  // Health check on backend
+  useEffect(() => {
+    fetch('http://localhost:5000/health')
+      .then(res => res.json())
+      .then(console.log)
+      .catch(console.error);
+  }, []);
+
+  // Add a tag
+  const addTag = (type, value) => {
+    const trimmed = value.trim();
+    if (!trimmed || keywords[type].includes(trimmed)) return;
+
+    setKeywords(prev => ({
+      ...prev,
+      [type]: [...prev[type], trimmed]
+    }));
+  };
+
+
+  // Handle key press (Enter) to add tag
+  const handleKeyDown = (e, type) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag(type, inputs[type]);
+      setInputs(prev => ({ ...prev, [type]: "" }));
+    }
+  };
+
+  // Handle blur to add tag
+  const handleBlur = (type) => {
+    if (inputs[type].trim() !== "") {
+      addTag(type, inputs[type]);
+      setInputs(prev => ({ ...prev, [type]: "" }));
+    }
+  };
+
+  // Clear all tags and inputs
+const clearAll = () => {
+    const store = useSearchStore.getState();
+
+    setKeywords({ and: [], or: [], not: [] });
+    setInputs({ and: "", or: "", not: "" });
+
+    store.setQuery({ and: [], or: [], not: [] });
+    store.setArticles([]);
+    store.setArticles([]);
+    store.setTopCountries([]);
+    store.setTopPublications([]);
+    store.setWordcloudData([]);
+    store.setTotalArticles(0);
+    store.setTrendData([]);
+    store.setSummary("");
+    store.resetAnalytics();
+
+    useSearchStore.getState().resetAnalytics(); // ← clean and all-in-one
+    window.history.replaceState(null, "", window.location.pathname);
+
+};
+
+  // Submit handler
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // 1. Merge existing query params from URL with current keywords
+  const urlParams = new URLSearchParams(window.location.search);
+  const existingQuery = {
+    and: urlParams.getAll("and"),
+    or: urlParams.getAll("or"),
+    not: urlParams.getAll("not"),
+  };
+
+  const mergedQuery = {
+    and: Array.from(new Set([...existingQuery.and, ...keywords.and])),
+    or: Array.from(new Set([...existingQuery.or, ...keywords.or])),
+    not: Array.from(new Set([...existingQuery.not, ...keywords.not])),
+  };
+
+  // 2. Check if the query is empty
+  const isEmpty =
+    mergedQuery.and.length === 0 &&
+    mergedQuery.or.length === 0 &&
+    mergedQuery.not.length === 0;
+
+  if (isEmpty) {
+    // Reset Zustand store and clear URL
+    useSearchStore.getState().setQuery({ and: [], or: [], not: [] });
+    useSearchStore.getState().setArticles([]);
+    useSearchStore.getState().resetAnalytics(); // ← clean and all-in-one
+    window.history.replaceState(null, "", window.location.pathname);
+    return;
+  }
+
+  // 3. Set query in Zustand store
+  useSearchStore.getState().setQuery(mergedQuery);
+
+  // 4. Update the browser URL with new query params
+  const params = new URLSearchParams();
+  mergedQuery.and.forEach((k) => params.append("and", k));
+  mergedQuery.or.forEach((k) => params.append("or", k));
+  mergedQuery.not.forEach((k) => params.append("not", k));
+  window.history.pushState(null, "", `?${params.toString()}`);
+
+  // 5. Fetch data from API and update Zustand
+  try {
+    const {
+      articles,
+      wordcloud_data,
+      total_articles,
+      top_publications,
+      top_countries,
+      trend_data,
+    } = await api.getData(mergedQuery);
+
+    useSearchStore.getState().setArticles(articles);
+    useSearchStore.getState().setTopCountries(top_countries);
+    useSearchStore.getState().setTopPublications(top_publications);
+    useSearchStore.getState().setWordcloudData(wordcloud_data);
+    useSearchStore.getState().setTotalArticles(total_articles);
+    useSearchStore.getState().setTrendData(trend_data);
+
+    // Fetch summary separately
+    const { summary } = await api.getSummary(mergedQuery);
+    useSearchStore.getState().setSummary(summary);
+
+  } catch (err) {
+    console.error("Failed to fetch data:", err);
+  }
+};
+
+//   const handleSubmit = async (e) => {
+//   e.preventDefault();
+
+//   const urlParams = new URLSearchParams(window.location.search);
+
+//   const existingQuery = {
+//     and: urlParams.getAll("and"),
+//     or: urlParams.getAll("or"),
+//     not: urlParams.getAll("not")
+//   };
+
+//   const mergedQuery = {
+//     and: Array.from(new Set([...existingQuery.and, ...keywords.and])),
+//     or: Array.from(new Set([...existingQuery.or, ...keywords.or])),
+//     not: Array.from(new Set([...existingQuery.not, ...keywords.not]))
+//   };
+
+//   const isEmpty =
+//     mergedQuery.and.length === 0 &&
+//     mergedQuery.or.length === 0 &&
+//     mergedQuery.not.length === 0;
+
+//   if (isEmpty) {
+//     // Reset Zustand store and clear URL
+//     useSearchStore.getState().setQuery({ and: [], or: [], not: [] });
+//     useSearchStore.getState().setArticles([]); // or set to mock if needed
+//     window.history.replaceState(null, "", window.location.pathname);
+//     return;
+//   }
+
+//   // Otherwise, continue with setting query and fetching data
+//   useSearchStore.getState().setQuery(mergedQuery);
+
+
+//   // *****injected code
+//  const isEmpty =
+//     keywords.and.length === 0 &&
+//     keywords.or.length === 0 &&
+//     keywords.not.length === 0;
+
+//   useSearchStore.getState().setQuery(keywords);
+
+//   if (isEmpty) {
+//     window.history.replaceState(null, "", window.location.pathname);
+//   } else {
+//     api.getData(keywords)
+//       .then(({ articles }) => {
+//         useSearchStore.getState().setArticles(articles);
+//       })
+//       .catch(console.error);
+
+//     const params = new URLSearchParams();
+//     keywords.and.forEach(k => params.append("and", k));
+//     keywords.or.forEach(k => params.append("or", k));
+//     keywords.not.forEach(k => params.append("not", k));
+//     window.history.pushState(null, "", `?${params.toString()}`);
+//   }
+
+//   //****injected code to update 
+
+//   // Update browser URL
+//   const params = new URLSearchParams();
+//   mergedQuery.and.forEach(k => params.append("and", k));
+//   mergedQuery.or.forEach(k => params.append("or", k));
+//   mergedQuery.not.forEach(k => params.append("not", k));
+//   window.history.pushState(null, "", `?${params.toString()}`);
+
+
+//   // Fetch articles and update store
+//   try {
+//     console.log('test data store',await api.getData(mergedQuery))
+//     const { articles, wordcloud_data, total_articles, top_publications, top_countries, trend_data } = await api.getData(mergedQuery);
+//     useSearchStore.getState().setArticles(articles);
+//     useSearchStore.getState().setTopCountries(top_countries);
+//     useSearchStore.getState().setTopPublications(top_publications);
+//     useSearchStore.getState().setWordcloudData(wordcloud_data);
+//     useSearchStore.getState().setTotalArticles(total_articles);
+//     useSearchStore.getState().setTrendData(trend_data);
+
+
+//     const {summary} = await api.getSummary(mergedQuery);
+//     useSearchStore.getState().setSummary(summary);
+
+//   } catch (err) {
+//     console.error("Failed to fetch data:", err);
+//   }
+// };
+
+  // Restore from URL on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    console.log('react', urlParams)
+
+    setKeywords({
+      and: urlParams.getAll("and"),
+      or: urlParams.getAll("or"),
+      not: urlParams.getAll("not"),
+    });
+  }, []);
+
+  // Render input group
+  const renderInputGroup = (type, label) => (
+    <Box
+      sx={{
+        border: "1px solid #cfcfcf",
+        borderRadius: 2,
+        padding: 1,
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 0.5,
+        backgroundColor: "white",
+        minWidth: 300,
+        flexGrow: 1,
+      }}
+    >
+      {keywords[type].map((tag) => (
+        <Chip
+          key={tag}
+          label={tag}
+          onDelete={() => removeTag(type, tag)}
+          sx={{ backgroundColor: "#6c5ce7", color: "white" }}
+        />
+      ))}
+      <TextField
+        variant="standard"
+        placeholder={`${label}...`}
+        sx={{ backgroundColor: "white", color: "white", width: '100%' }}
+        value={inputs[type]}
+        onChange={(e) =>
+          setInputs(prev => ({ ...prev, [type]: e.target.value }))
+        }
+        onKeyDown={(e) => handleKeyDown(e, type)}
+        onBlur={() => handleBlur(type)}
+        InputProps={{
+          disableUnderline: true,
+          sx: { ml: 1, minWidth: 120, flexGrow: 1 },
+        }}
+        inputProps={{ "aria-label": `${label} keywords input` }}
+      />
+    </Box>
+  );
+
+  return (
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      className="boolean-search-form"
+      sx={{
+        mx: "auto",
+        display: "grid",
+        gap: 1,
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+        alignItems: "center",
+      }}
+      noValidate
+      autoComplete="off"
+    >
+      {renderInputGroup("and", "Keyword AND")}
+      {renderInputGroup("or", "Keyword OR")}
+      {renderInputGroup("not", "Keyword NOT")}
+
+      <Box
+        sx={{
+          gridColumn: "1 / -1",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 2,
+          mt: 1,
+          flexWrap: "wrap",
+          
+        }}
+        className="buttons-container"
+      >
+        <Button variant="outlined" onClick={clearAll} sx={{
+            fontSize: 10,
+        }}>
+          Clear
+        </Button>
+        <Button
+          variant="contained"
+          type="submit"
+          disableElevation
+          sx={{
+            backgroundColor: '#3129d9',
+            color: '#fff',
+            fontSize: 10,
+            '&:hover': {
+              backgroundColor: '#251f9a',
+            },
+          }}
+        >
+          Search
+        </Button>
+      </Box>
+    </Box>
+  );
+}
+
+export default BooleanSearch;

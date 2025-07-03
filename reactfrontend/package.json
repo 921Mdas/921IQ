@@ -11,8 +11,22 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.2.0",
+    "@mui/material": "^7.2.0",
+    "axios": "^1.10.0",
+    "chart.js": "^4.5.0",
+    "d3": "^7.9.0",
+    "d3-cloud": "^1.2.7",
+    "install": "^0.13.0",
+    "npm": "^11.4.2",
+    "qs": "^6.14.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.3",
+    "topojson-client": "^3.1.0",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
@@ -24,6 +38,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
     "patch-package": "^8.0.0",
+    "sass-embedded": "^1.89.2",
     "vite": "^7.0.0"
   }
 }
