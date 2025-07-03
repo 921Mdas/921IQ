@@ -1,0 +1,94 @@
+
+
+// newscard
+.news-card {
+    display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  max-width: 600px;
+}
+
+.article-image {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  background-color: #f3f4f6;
+}
+
+.article-info {
+  flex: 1;
+}
+
+.article-title {
+  font-weight: bold;
+  text-decoration: none;
+  color: #1a202c;
+  display: block;
+  margin-bottom: 0.25rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.article-date {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.source-name {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.missing {
+  font-style: italic;
+}
+
+// articles
+
+.mentions-container{
+  max-height: 70vh; /* Or whatever height works for your layout */
+  overflow-y: auto; /* Enable vertical scrolling */
+
+}
+
+
+// analytics
+.mentions-analytics {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 70vh; /* Or whatever height works for your layout */
+  flex: 1; /* Takes available space without pushing other elements */
+  
+  /* Optional: Add padding if needed */
+  padding-right: 0.5rem; /* Prevents scrollbar from touching edge */
+
+  .word_cloud,
+  .top_pub, .trend_line, .top_countries {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    flex: 1 1 300px;
+  }
+
+
+   
+.trend_line{
+  height: 70vh;
+}
+
+
+
+}
+
