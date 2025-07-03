@@ -37,16 +37,19 @@
 /* Slide out on mobile by default */
 @media (max-width: 768px) {
   .analytics {
-    position: fixed;
-    width: 90%;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    height: 100%;
-    z-index: 1000;
-    transform: translateX(100%);
-    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
-  }
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 90%;
+  height: 100vh; /* use 100vh to occupy full viewport height */
+  overflow-y: auto; /* enable vertical scrolling */
+  transform: translateX(100%);
+  z-index: 1000;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  background-color: white; /* optional: prevent content from being transparent */
+}
+
 
   .analytics.active {
     transform: translateX(0%);

@@ -9,15 +9,49 @@ function BooleanSearch() {
   const [keywords, setKeywords] = useState({ and: [], or: [], not: [] });
   const [inputs, setInputs] = useState({ and: "", or: "", not: "" });
 
+
 const removeTag = useCallback((type, value) => {
   setKeywords(prev => {
     const updated = {
       ...prev,
       [type]: prev[type].filter(v => v !== value)
     };
+
+    // Update Zustand
+    useSearchStore.getState().setQuery(updated);
+
+    // Update URL
+    const params = new URLSearchParams();
+    updated.and.forEach(k => params.append("and", k));
+    updated.or.forEach(k => params.append("or", k));
+    updated.not.forEach(k => params.append("not", k));
+    window.history.pushState(null, "", `?${params.toString()}`);
+
+    // Optionally re-fetch data
+    api.getData(updated).then(({
+      articles,
+      wordcloud_data,
+      total_articles,
+      top_publications,
+      top_countries,
+      trend_data
+    }) => {
+      useSearchStore.getState().setArticles(articles);
+      useSearchStore.getState().setTopCountries(top_countries);
+      useSearchStore.getState().setTopPublications(top_publications);
+      useSearchStore.getState().setWordcloudData(wordcloud_data);
+      useSearchStore.getState().setTotalArticles(total_articles);
+      useSearchStore.getState().setTrendData(trend_data);
+    });
+
+    api.getSummary(updated).then(({ summary }) => {
+      useSearchStore.getState().setSummary(summary);
+    });
+
     return updated;
   });
 }, []);
+
 
 
 
@@ -151,93 +185,6 @@ const clearAll = () => {
   }
 };
 
-//   const handleSubmit = async (e) => {
-//   e.preventDefault();
-
-//   const urlParams = new URLSearchParams(window.location.search);
-
-//   const existingQuery = {
-//     and: urlParams.getAll("and"),
-//     or: urlParams.getAll("or"),
-//     not: urlParams.getAll("not")
-//   };
-
-//   const mergedQuery = {
-//     and: Array.from(new Set([...existingQuery.and, ...keywords.and])),
-//     or: Array.from(new Set([...existingQuery.or, ...keywords.or])),
-//     not: Array.from(new Set([...existingQuery.not, ...keywords.not]))
-//   };
-
-//   const isEmpty =
-//     mergedQuery.and.length === 0 &&
-//     mergedQuery.or.length === 0 &&
-//     mergedQuery.not.length === 0;
-
-//   if (isEmpty) {
-//     // Reset Zustand store and clear URL
-//     useSearchStore.getState().setQuery({ and: [], or: [], not: [] });
-//     useSearchStore.getState().setArticles([]); // or set to mock if needed
-//     window.history.replaceState(null, "", window.location.pathname);
-//     return;
-//   }
-
-//   // Otherwise, continue with setting query and fetching data
-//   useSearchStore.getState().setQuery(mergedQuery);
-
-
-//   // *****injected code
-//  const isEmpty =
-//     keywords.and.length === 0 &&
-//     keywords.or.length === 0 &&
-//     keywords.not.length === 0;
-
-//   useSearchStore.getState().setQuery(keywords);
-
-//   if (isEmpty) {
-//     window.history.replaceState(null, "", window.location.pathname);
-//   } else {
-//     api.getData(keywords)
-//       .then(({ articles }) => {
-//         useSearchStore.getState().setArticles(articles);
-//       })
-//       .catch(console.error);
-
-//     const params = new URLSearchParams();
-//     keywords.and.forEach(k => params.append("and", k));
-//     keywords.or.forEach(k => params.append("or", k));
-//     keywords.not.forEach(k => params.append("not", k));
-//     window.history.pushState(null, "", `?${params.toString()}`);
-//   }
-
-//   //****injected code to update 
-
-//   // Update browser URL
-//   const params = new URLSearchParams();
-//   mergedQuery.and.forEach(k => params.append("and", k));
-//   mergedQuery.or.forEach(k => params.append("or", k));
-//   mergedQuery.not.forEach(k => params.append("not", k));
-//   window.history.pushState(null, "", `?${params.toString()}`);
-
-
-//   // Fetch articles and update store
-//   try {
-//     console.log('test data store',await api.getData(mergedQuery))
-//     const { articles, wordcloud_data, total_articles, top_publications, top_countries, trend_data } = await api.getData(mergedQuery);
-//     useSearchStore.getState().setArticles(articles);
-//     useSearchStore.getState().setTopCountries(top_countries);
-//     useSearchStore.getState().setTopPublications(top_publications);
-//     useSearchStore.getState().setWordcloudData(wordcloud_data);
-//     useSearchStore.getState().setTotalArticles(total_articles);
-//     useSearchStore.getState().setTrendData(trend_data);
-
-
-//     const {summary} = await api.getSummary(mergedQuery);
-//     useSearchStore.getState().setSummary(summary);
-
-//   } catch (err) {
-//     console.error("Failed to fetch data:", err);
-//   }
-// };
 
   // Restore from URL on mount
   useEffect(() => {

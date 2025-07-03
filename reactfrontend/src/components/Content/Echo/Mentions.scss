@@ -92,3 +92,15 @@
 
 }
 
+
+@media (max-width: 768px){
+
+  .mentions-container{
+    width: 90vw;
+  }
+
+  .mentions-analytics{
+  overflow-y:unset; /* Enable vertical scrolling */
+     
+  }
+}
