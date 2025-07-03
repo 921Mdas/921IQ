@@ -6,6 +6,8 @@ import MentionsAnalytics from './MentionsAnalytics'
 import IconButton from '@mui/material/IconButton'
 import InsightsIcon from '@mui/icons-material/Insights'
 import CloseIcon from '@mui/icons-material/Close'
+import EmptyState from './Filler'
+import { useSearchStore } from '../../../store'
 
 const Echo = () => {
   const [showAnalytics, setShowAnalytics] = useState(false)
@@ -49,27 +51,49 @@ const Echo = () => {
     }
   }, [showAnalytics])
 
+  const query = useSearchStore((state) => state.query);
+  const keywordsExist = query.and.length || query.or.length || query.not.length;
+
+
+
   return (
     <div className='echo_container'>
       <BooleanSearch />
 
       {/* Hamburger toggle (only visible on mobile via CSS) */}
       <HamburgerBtn toggleAnalytics={toggleAnalytics} showAnalytics={showAnalytics} />
+       {!keywordsExist ? (
+        <EmptyState/>
+      ) : (
+        <div className="responsive-container">
+          {/* Articles/Mentions Section */}
+          <div className="articles-column">
+            <Mentions />
+          </div>
 
-      <div className='responsive-container'>
-        {/* Articles/Mentions Section */}
+          {/* Analytics Panel */}
+          <div
+            ref={analyticsRef}
+            className={`widgets-column analytics ${showAnalytics ? 'active' : ''}`}
+          >
+            <MentionsAnalytics />
+          </div>
+        </div>
+      )}
+      {/* <div className='responsive-container'>
+      
         <div className='articles-column'>
           <Mentions />
         </div>
 
-        {/* Analytics Panel */}
+ 
         <div
           ref={analyticsRef}
           className={`widgets-column analytics ${showAnalytics ? 'active' : ''}`}
         >
           <MentionsAnalytics />
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }

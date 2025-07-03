@@ -16,6 +16,8 @@
   grid-template-rows: var(--nav-height) 1fr;
   min-height: 100vh;
   width: 100vw;
+  overflow: hidden; // prevent whole page from scrolling
+
 
   .Nav {
     grid-area: nav;
@@ -63,6 +65,91 @@
     }
   }
 }
+
+
+@media (max-width: 768px) {
+  .layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    overflow-x: hidden !important;
+
+
+    .Nav {
+      height: var(--nav-height);
+      background: var(--color-white);
+      padding: var(--fs-md); // ✅ keep this full width
+      border-bottom: solid 1px var(--color-gray-200);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .Content {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--color-gray-100);
+
+      // ✅ prevent horizontal scroll
+      overflow-x: hidden;
+
+      // ✅ provide visual breathing room
+      padding: 1rem; // or your preferred spacing
+      box-sizing: border-box;
+
+      // ✅ constrain internal elements if they overflow
+      & > * {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+    }
+
+    .Aside {
+      display: none;
+    }
+  }
+}
+
+
+//   @media (max-width: 768px) {
+
+// .layout {
+//   display: flex;
+//   flex-direction: column;
+//   height: 100vh; // This is critical for proper scrolling behavior
+//   width: 100vw;
+//   overflow: hidden; // prevent global page scrolling
+
+//   .Nav {
+//     height: var(--nav-height);
+//     background: var(--color-white);
+//     padding: var(--fs-md);
+//     border-bottom: solid 1px var(--color-gray-200);
+//     flex-shrink: 0;
+//     position: sticky;
+//     top: 0;
+//     z-index: 10;
+//   }
+
+//   .Content {
+//     flex: 1;
+//     overflow-y: auto;
+//     background: var(--color-gray-100);
+//     padding: var(--fs-md);
+//   }
+
+//   .Aside {
+//     display: none;
+//   }
+
+
+// }
+
+
+//   }
 
 
 // reusables

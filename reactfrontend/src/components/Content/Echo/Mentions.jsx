@@ -110,7 +110,7 @@ export function NewsCard({ article }) {
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"
-            sx={{ fontSize: 18, fontWeight: 700, mt: 1, color: '#111' }}
+            sx={{ fontSize: 14, fontWeight: 480, mt: 1, color: '#111' }}
           >
             {title}
           </Link>
