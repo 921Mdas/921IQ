@@ -55,7 +55,7 @@ export function NewsCard({ article }) {
     title,
     url,
     source_name,
-    // date,
+    date,
     source_logo,
     // image,
     // snippet,
@@ -135,14 +135,14 @@ export function NewsCard({ article }) {
           </Box> */}
 
           {/* Bottom Stats */}
-          {/* <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <Typography variant="caption" color="text.secondary">
-              {reach}
+              {date}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            {/*<Typography variant="caption" color="text.secondary">
               {views}
-            </Typography>
-          </Box> */}
+            </Typography>*/}
+          </Box> 
         </Box>
       </Box>
 
