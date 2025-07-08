@@ -6,10 +6,26 @@ import string
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
+import dateparser
+from datetime import datetime
+import time
 
 # Only needed once, during app start
 nltk.download("punkt")
 nltk.download("stopwords")
+
+
+
+def fetch_with_retries(url, retries=3, backoff=5):
+    for attempt in range(retries):
+        try:
+            return requests.get(url, timeout=15)
+        except requests.exceptions.RequestException as e:
+            if attempt < retries - 1:
+                time.sleep(backoff * (attempt + 1))
+            else:
+                raise e
+
 
 def extract_keywords(titles, top_n=30):
     stop_words = set(stopwords.words('english')) | set(stopwords.words('french'))
@@ -63,33 +79,37 @@ month_translation = {
     'septembre': 'September', 'octobre': 'October', 'novembre': 'November', 'décembre': 'December'
 }
 
+
 def convert_date(date_string):
     if isinstance(date_string, datetime):
-        return date_string.date()
+        return date_string
 
     if not date_string or not isinstance(date_string, str):
         return None
 
-    date_string = date_string.strip().lower()
+    dt = dateparser.parse(date_string, languages=['fr'])
+    if dt:
+        return dt.date()  # Return date only, remove `.date()` if you want datetime
+    return None
 
-    # Try RFI format: '20/05/2025'
+def extract_sur7cd_date(url):
     try:
-        return datetime.strptime(date_string, "%d/%m/%Y").date()
-    except ValueError:
-        pass
+        res = requests.get(url, timeout=10)
+        soup = BeautifulSoup(res.content, 'html.parser')
 
-    # Try Actu format: '20 mai 2025'
-    try:
-        parts = date_string.split()
-        if len(parts) != 3:
-            return None
+        date_tag = soup.select_one('span.date-display-single') or \
+                   soup.select_one('span.submitted') or \
+                   soup.select_one('time')
 
-        day, month, year = parts
-        english_month = month_translation.get(month, month)
-        date_string_english = f"{day} {english_month} {year}"
-        return datetime.strptime(date_string_english, "%d %B %Y").date()
-    except Exception:
-        return None
+        raw_date = date_tag.get('content') if date_tag and date_tag.has_attr('content') else (
+            date_tag.text.strip() if date_tag else None
+        )
+
+        date = convert_date(raw_date) if raw_date else datetime.now()
+        return date
+    except Exception as e:
+        print(f"❌ Failed to fetch date from {url} — {e}")
+        return datetime.now()
 
 
 def testSoup(url):

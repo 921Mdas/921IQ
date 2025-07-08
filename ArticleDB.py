@@ -1,4 +1,3 @@
-
 import psycopg2
 
 def runDB(data: list):
@@ -13,29 +12,25 @@ def runDB(data: list):
         cursor = conn.cursor()
         print("✅ Database connection established successfully!")
 
-        cur = conn.cursor()
-        cur.execute("SELECT current_database();")
-        db_name = cur.fetchone()[0]
+        # Confirm DB and current article count
+        cursor.execute("SELECT current_database();")
+        db_name = cursor.fetchone()[0]
         print(f"Connected to database: {db_name}")
 
-        cur.execute("SELECT COUNT(*) FROM articles;")
-        count = cur.fetchone()[0]
-        print(f"Number of articles in the table: {count}")
-
-        cur.close()
+        cursor.execute("SELECT COUNT(*) FROM articles;")
+        count = cursor.fetchone()[0]
+        print(f"Number of articles in the table: {count}\n")
 
         new_article_count = 0
         updated_article_count = 0
 
         for article in data:
-            # Required fields
             title = article.get('title', 'unknown')
             url = article.get('url')
             date_value = article.get('date', 'unknown')
             source_name = article.get('source_name', 'unknown')
             source_logo = article.get('source_logo', 'unknown')
 
-            # New fields
             author = article.get('author', 'unknown')
             category = article.get('category', 'unknown')
             body_intro = article.get('body_intro', 'unknown')
@@ -47,11 +42,13 @@ def runDB(data: list):
             sentiment = article.get('sentiment', 'unknown')
 
             if not (title and url and date_value and source_name and source_logo):
+                print(f"⚠️ Skipping invalid article (missing required fields): {title}")
                 continue
 
-            # Check if the article already exists
+            # Check if article already exists
+            print(f"🔍 Checking URL: {url}")
             cursor.execute("""
-                SELECT source_name, source_logo 
+                SELECT title, date, source_name, source_logo 
                 FROM articles 
                 WHERE url = %s 
                 LIMIT 1;
@@ -59,20 +56,27 @@ def runDB(data: list):
             existing = cursor.fetchone()
 
             if existing:
-                existing_name, existing_logo = existing
+                existing_title, existing_date, existing_name, existing_logo = existing
 
-                if (not existing_name or not existing_logo) and (source_name and source_logo):
+                # Optional update if values changed
+                if (existing_title != title or existing_date != date_value or
+                    not existing_name or not existing_logo):
+
                     cursor.execute("""
                         UPDATE articles
-                        SET source_name = %s,
+                        SET title = %s,
+                            date = %s,
+                            source_name = %s,
                             source_logo = %s
                         WHERE url = %s;
-                    """, (source_name, source_logo, url))
+                    """, (title, date_value, source_name, source_logo, url))
                     updated_article_count += 1
                     print(f"🔄 Updated article: {url}")
+                else:
+                    print(f"⏭ Already exists: {url}")
                 continue
 
-            # Insert article with all fields
+            # Insert new article
             cursor.execute("""
                 INSERT INTO articles (
                     title, date, url, source_name, source_logo,
@@ -97,7 +101,7 @@ def runDB(data: list):
         print(f"🔄 {updated_article_count} article(s) updated successfully!")
 
     except psycopg2.Error as e:
-        print("❌ Failed to connect to the database")
+        print("❌ Failed to connect to or operate on the database")
         print("Error:", e)
 
     finally:

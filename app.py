@@ -33,9 +33,6 @@ def home():
     cursor = None
     try:
         # Extract query params
-        # and_keywords = request.args.getlist("and")
-        # or_keywords = request.args.getlist("or")
-        # not_keywords = request.args.getlist("not")
         and_keywords = [kw for kw in request.args.getlist("and") if kw]
         or_keywords = [kw for kw in request.args.getlist("or") if kw]
         not_keywords = [kw for kw in request.args.getlist("not") if kw]
@@ -198,7 +195,7 @@ def get_summary():
         
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute(f"SELECT title FROM articles WHERE {where_clause} ORDER BY date DESC LIMIT 5;", params)
+        cursor.execute(f"SELECT title FROM articles WHERE {where_clause} ORDER BY date DESC LIMIT 20;", params)
         
         titles = [row["title"] for row in cursor.fetchall()]
         print(f"Found {len(titles)} titles")
@@ -220,44 +217,6 @@ def get_summary():
         if cursor: cursor.close()
         if conn: conn.close()
 
-
-
-# @app.route("/get_summary", methods=["GET"])
-# def get_summary():
-#     conn = None
-#     cursor = None
-#     try:
-#          # 🔒 Reject summary requests with no query
-#         # if not (request.args.getlist("and") or request.args.getlist("or") or request.args.getlist("not")):
-#         #     return jsonify({"summary": "No query provided", "count": 0})
-        
-#         where_clause, params = build_where_clause(request)
-#         print(f"Executing query with WHERE: {where_clause}")  # Debug log
-        
-#         conn = get_db_connection()
-#         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        
-#         cursor.execute(f"SELECT title FROM articles WHERE {where_clause} ORDER BY date DESC LIMIT 5;", params)
-        
-#         titles = [row["title"] for row in cursor.fetchall()]
-#         print(f"Found {len(titles)} titles")  # Debug log
-        
-#         if not titles:
-#             return jsonify({"summary": "No matching articles found", "count": 0})
-            
-#         summary = summarize_titles(titles)
-#         print('Generated summary:', summary)  # Debug log
-        
-#         return jsonify({
-#             "summary": summary,
-#             "count": len(titles)
-#         })
- 
-#     except Exception as e:
-#         return jsonify({"error summary": str(e)}), 500
-#     finally:
-#         if cursor: cursor.close()
-#         if conn: conn.close()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
