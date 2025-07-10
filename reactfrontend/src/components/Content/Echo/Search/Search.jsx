@@ -4,31 +4,100 @@ import React, { useState, useEffect, useCallback } from "react";
 import { TextField, Chip, Box, Button } from "@mui/material";
 import { useSearchStore } from "../../../../store";
 import { api } from "../../../../api";
+import SourceSelector from "./SourceDropDown";
 
 function BooleanSearch() {
   const [keywords, setKeywords] = useState({ and: [], or: [], not: [] });
   const [inputs, setInputs] = useState({ and: "", or: "", not: "" });
+  const selectedSources = useSearchStore(state => state.selectedSources);
 
 
-const removeTag = useCallback((type, value) => {
+// const removeTag = useCallback((type, value) => {
+//   setKeywords(prev => {
+//     const updated = {
+//       ...prev,
+//       [type]: prev[type].filter(v => v !== value)
+//     };
+
+//     // Update Zustand
+//     useSearchStore.getState().setQuery(updated);
+
+//     // Update URL
+//     const params = new URLSearchParams();
+//     updated.and.forEach(k => params.append("and", k));
+//     updated.or.forEach(k => params.append("or", k));
+//     updated.not.forEach(k => params.append("not", k));
+//     window.history.pushState(null, "", `?${params.toString()}`);
+
+//     // Optionally re-fetch data
+//     api.getData(updated).then(({
+//       articles,
+//       wordcloud_data,
+//       total_articles,
+//       top_publications,
+//       top_countries,
+//       trend_data
+//     }) => {
+//       useSearchStore.getState().setArticles(articles);
+//       useSearchStore.getState().setTopCountries(top_countries);
+//       useSearchStore.getState().setTopPublications(top_publications);
+//       useSearchStore.getState().setWordcloudData(wordcloud_data);
+//       useSearchStore.getState().setTotalArticles(total_articles);
+//       useSearchStore.getState().setTrendData(trend_data);
+//     });
+
+//     api.getSummary(updated).then(({ summary }) => {
+//       useSearchStore.getState().setSummary(summary);
+//     });
+
+//     return updated;
+//   });
+// }, []);
+
+
+
+
+  // Health check on backend
+  
+  const removeTag = useCallback((type, value) => {
   setKeywords(prev => {
     const updated = {
       ...prev,
       [type]: prev[type].filter(v => v !== value)
     };
 
-    // Update Zustand
-    useSearchStore.getState().setQuery(updated);
+    // Get current state
+    const store = useSearchStore.getState();
+    
+    // Update Zustand store
+    store.setQuery(updated);
+    
+    // Clear selected sources if we removed the last keyword
+    if (updated.and.length === 0 && updated.or.length === 0 && updated.not.length === 0) {
+      store.setSelectedSources([]); // Reset sources when no keywords left
+    }
 
     // Update URL
     const params = new URLSearchParams();
     updated.and.forEach(k => params.append("and", k));
     updated.or.forEach(k => params.append("or", k));
     updated.not.forEach(k => params.append("not", k));
+    
+    // Also include selected sources in URL if they exist
+    if (store.selectedSources.length > 0) {
+      store.selectedSources.forEach(s => params.append("sources", s));
+    }
+    
     window.history.pushState(null, "", `?${params.toString()}`);
 
-    // Optionally re-fetch data
-    api.getData(updated).then(({
+    // Prepare API params
+    const apiParams = { ...updated };
+    if (store.selectedSources.length > 0) {
+      apiParams.sources = store.selectedSources.join(',');
+    }
+
+    // Fetch data
+    api.getData(apiParams).then(({
       articles,
       wordcloud_data,
       total_articles,
@@ -36,26 +105,24 @@ const removeTag = useCallback((type, value) => {
       top_countries,
       trend_data
     }) => {
-      useSearchStore.getState().setArticles(articles);
-      useSearchStore.getState().setTopCountries(top_countries);
-      useSearchStore.getState().setTopPublications(top_publications);
-      useSearchStore.getState().setWordcloudData(wordcloud_data);
-      useSearchStore.getState().setTotalArticles(total_articles);
-      useSearchStore.getState().setTrendData(trend_data);
+      store.setArticles(articles);
+      store.setTopCountries(top_countries);
+      store.setTopPublications(top_publications);
+      store.setWordcloudData(wordcloud_data);
+      store.setTotalArticles(total_articles);
+      store.setTrendData(trend_data);
     });
 
-    api.getSummary(updated).then(({ summary }) => {
-      useSearchStore.getState().setSummary(summary);
+    api.getSummary(apiParams).then(({ summary }) => {
+      store.setSummary(summary);
     });
 
     return updated;
   });
 }, []);
-
-
-
-
-  // Health check on backend
+  
+  
+  
   useEffect(() => {
     fetch('http://localhost:5000/health')
       .then(res => res.json())
@@ -127,11 +194,14 @@ const clearAll = () => {
     not: urlParams.getAll("not"),
   };
 
-  const mergedQuery = {
-    and: Array.from(new Set([...existingQuery.and, ...keywords.and])),
-    or: Array.from(new Set([...existingQuery.or, ...keywords.or])),
-    not: Array.from(new Set([...existingQuery.not, ...keywords.not])),
-  };
+const mergedQuery = {
+  and: Array.from(new Set([...existingQuery.and, ...keywords.and])),
+  or: Array.from(new Set([...existingQuery.or, ...keywords.or])),
+  not: Array.from(new Set([...existingQuery.not, ...keywords.not])),
+  sources: selectedSources, // ← independent field
+};
+
+
 
   // 2. Check if the query is empty
   const isEmpty =
@@ -156,6 +226,12 @@ const clearAll = () => {
   mergedQuery.and.forEach((k) => params.append("and", k));
   mergedQuery.or.forEach((k) => params.append("or", k));
   mergedQuery.not.forEach((k) => params.append("not", k));
+
+
+  mergedQuery.sources.forEach((s) => params.append("source", s)); // ← here
+
+
+
   window.history.pushState(null, "", `?${params.toString()}`);
 
   // 5. Fetch data from API and update Zustand
@@ -186,18 +262,30 @@ const clearAll = () => {
 };
 
 
-  // Restore from URL on mount
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+  const urlParams = new URLSearchParams(window.location.search);
 
-    console.log('react', urlParams)
+  console.log('url paramas')
+  console.log(urlParams.getAll('source'))
+  // issue here is that drcongo is included as source amongst the sources we put null
 
-    setKeywords({
-      and: urlParams.getAll("and"),
-      or: urlParams.getAll("or"),
-      not: urlParams.getAll("not"),
-    });
-  }, []);
+
+  setKeywords({
+    and: urlParams.getAll("and"),
+    or: urlParams.getAll("or"),
+    not: urlParams.getAll("not"),
+  });
+
+  // ✅ Restore selectedSources from ?source=...
+ const sources = urlParams.getAll("source").filter(source => 
+  source !== null && source !== "" && source !== "null" && source !== "undefined"
+);
+
+
+// Update Zustand store with clean values
+useSearchStore.getState().setSelectedSources(sources);
+
+}, []);
 
   // Render input group
   const renderInputGroup = (type, label) => (
@@ -259,7 +347,28 @@ const clearAll = () => {
       {renderInputGroup("and", "Keyword AND")}
       {renderInputGroup("or", "Keyword OR")}
       {renderInputGroup("not", "Keyword NOT")}
-
+ <Box
+  sx={{
+    border: "1px solid #cfcfcf",
+    borderRadius: 2,
+    padding: 2,
+    backgroundColor: "white",
+    minWidth: 300,
+    maxHeight: 200,
+    overflowY: "auto",
+    flexGrow: 1,
+    gridColumn: "1 / -1",
+    display: "flex",
+    flexDirection: "column",
+    gap: 1,
+  }}
+>
+  <SourceSelector
+    onSelect={(selected) => {
+      useSearchStore.getState().setSelectedSources(selected);
+    }}
+  />
+</Box>
       <Box
         sx={{
           gridColumn: "1 / -1",
@@ -272,6 +381,7 @@ const clearAll = () => {
         }}
         className="buttons-container"
       >
+        
         <Button variant="outlined" onClick={clearAll} sx={{
             fontSize: 10,
         }}>

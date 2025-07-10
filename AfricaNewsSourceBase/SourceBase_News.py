@@ -35,7 +35,7 @@ scraper_news_sources = {
         "source_meta": {
             "source_name": "7sur7.cd",
             "country": "Dem. Rep. Congo",
-            "source_logo": "<your_base64_logo_here>",
+            "source_logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzFBNUZGRiIgZD0iTTMgM3YxOGgxOHYtMThoLTE4em0xNiAxM2gtMTR2LTloMTR2OXptMC0xMWgtMTR2LTJoMTR2MnoiLz48L3N2Zz4=",
         },
     },
     # Add more scrapers here
