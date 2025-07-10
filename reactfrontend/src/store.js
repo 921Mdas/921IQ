@@ -23,12 +23,17 @@ export const useSearchStore = create((set) => ({
   top_countries: [],
   total_articles: 0,
   trend_data: [],
+  selectedSources: [],
+
   
   setError: (error) => set({ error }), // ← new
 
-
   // Actions
   setQuery: (query) => set({ query }),
+
+  setSelectedSources: (sources) => set({ selectedSources: sources }),
+  
+  clearSelectedSources: () => set({ selectedSources: [] }),
 
   setArticles: (articles) => set((state) => ({
     articles: hasKeywords(state.query) ? articles : getMockArticles()

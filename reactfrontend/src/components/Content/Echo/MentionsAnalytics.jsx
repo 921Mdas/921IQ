@@ -40,10 +40,9 @@ const MentionsAnalytics = () => {
 const summary = useSearchStore((state) => state.summary) || '';
 const summaryValue = typeof summary === 'string' ? summary : summary?.summary || '';
 
-const {trend_data, total_articles, wordcloud_data, top_publications, top_countries} = useSearchStore((state) => state)
+const {trend_data, _total_articles, wordcloud_data, top_publications, top_countries} = useSearchStore((state) => state)
 
 
-console.log('testing wordcloud',wordcloud_data)
 
 
   // AI summary content

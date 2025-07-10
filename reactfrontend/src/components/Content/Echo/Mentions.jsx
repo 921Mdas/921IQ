@@ -8,6 +8,7 @@ import Link from '@mui/material/Link'; // ✅ correct
 import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import {  Chip } from '@mui/material';
+import { useState, useEffect } from 'react';
 
 
 
@@ -50,61 +51,187 @@ import {  Chip } from '@mui/material';
 // }
 
 
+// export function NewsCard({ article }) {
+//   const {
+//     title,
+//     url,
+//     source_name,
+//     date,
+//     source_logo,
+//     // image,
+//     // snippet,
+//     // reach = '124k Reach',
+//     // views = '21 Views',
+//     // sentiment = 'Negative',
+//     // keyword = 'Kabila',
+//   } = article;
+
+//   return (
+//     <Box
+//       sx={{
+//         display: 'flex',
+//         flexDirection: 'row',
+//         p: 2,
+//         borderBottom: '1px solid #e0e0e0',
+//         alignItems: 'flex-start',
+//         justifyContent: 'space-between',
+//       }}
+//     >
+//       {/* Left Section: Avatar + Info */}
+//       <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+//         {/* Avatar */}
+//         <Avatar
+//           alt={source_name || 'News icon'}
+//           src={source_logo}
+//           variant="rounded"
+//           sx={{ width: 40, height: 40 }}
+//           imgProps={{
+//             onError: (e) => {
+//               e.target.onerror = null;
+//               e.target.src = '/static/Images/news-icon.png';
+//             },
+//           }}
+//         />
+
+//         {/* Info */}
+//         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+//           {/* Source & Date */}
+//           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+//             {source_name || 'Unknown Source'}
+//           </Typography>
+
+//           {/* future ones */}
+//           {/* <Typography variant="caption" color="text.secondary">
+//             News | US | {new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+//           </Typography> */}
+
+//           {/* Title */}
+//           <Link
+//             href={url}
+//             target="_blank"
+//             rel="noopener noreferrer"
+//             underline="hover"
+//             sx={{ fontSize: 14, fontWeight: 480, mt: 1, color: '#111' }}
+//           >
+//             {title}
+//           </Link>
+
+//           {/* Snippet */}
+//           {/* <Typography
+//             variant="body2"
+//             color="text.secondary"
+//             sx={{ mt: 1 }}
+//           >
+//             {snippet || 'Lorem ipsum preview text of the news article...'}
+//           </Typography> */}
+
+//           {/* Highlighted Word */}
+//           {/* <Box sx={{ mt: 1 }}>
+//             <Chip
+//               label={keyword}
+//               variant="outlined"
+//               size="small"
+//               sx={{ fontWeight: 500, fontSize: 12 }}
+//             />
+//           </Box> */}
+
+//           {/* Bottom Stats */}
+//            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+//             <Typography variant="caption" color="text.secondary">
+//               {date}
+//             </Typography>
+//             {/*<Typography variant="caption" color="text.secondary">
+//               {views}
+//             </Typography>*/}
+//           </Box> 
+//         </Box>
+//       </Box>
+
+//       {/* Flag/Image & Sentiment */}
+//       {/* <Box sx={{ textAlign: 'right' }}>
+//         {image && (
+//           <img
+//             src={image}
+//             alt="news visual"
+//             style={{
+//               width: 60,
+//               height: 40,
+//               objectFit: 'cover',
+//               borderRadius: 4,
+//               marginBottom: 8,
+//             }}
+//           />
+//         )}
+//         <Typography
+//           variant="caption"
+//           color="error"
+//           sx={{ fontWeight: 500 }}
+//         >
+//           {sentiment}
+//         </Typography>
+//       </Box> */}
+//     </Box>
+//   );
+// }
+
+
+
+
 export function NewsCard({ article }) {
-  const {
-    title,
-    url,
-    source_name,
-    date,
-    source_logo,
-    // image,
-    // snippet,
-    // reach = '124k Reach',
-    // views = '21 Views',
-    // sentiment = 'Negative',
-    // keyword = 'Kabila',
-  } = article;
+  const { title, url, source_name, date, source_logo } = article;
+  const [logoUrl, setLogoUrl] = useState('/static/Images/news-icon.png');
+
+  useEffect(() => {
+    const validateLogo = (logo) => {
+      try {
+        // Basic validation for data URLs
+        if (logo && typeof logo === 'string') {
+          if (logo.startsWith('data:image/')) {
+            // Verify the Base64 portion
+            const base64Part = logo.split(',')[1];
+            if (base64Part && window.atob(base64Part)) {
+              return logo;
+            }
+          } else if (logo.startsWith('http')) {
+            return logo;
+          }
+        }
+        return null;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const validLogo = validateLogo(source_logo);
+    setLogoUrl(validLogo || '/static/Images/news-icon.png');
+  }, [source_logo]);
+
+  const handleImageError = (e) => {
+    e.target.onerror = null;
+    e.target.src = '/static/Images/news-icon.png';
+  };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        p: 2,
-        borderBottom: '1px solid #e0e0e0',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-      }}
-    >
-      {/* Left Section: Avatar + Info */}
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'row',
+      p: 2,
+      borderBottom: '1px solid #e0e0e0',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+    }}>
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-        {/* Avatar */}
         <Avatar
           alt={source_name || 'News icon'}
-          src={source_logo}
+          src={logoUrl}
           variant="rounded"
           sx={{ width: 40, height: 40 }}
-          imgProps={{
-            onError: (e) => {
-              e.target.onerror = null;
-              e.target.src = '/static/Images/news-icon.png';
-            },
-          }}
+          imgProps={{ onError: handleImageError }}
         />
-
-        {/* Info */}
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          {/* Source & Date */}
           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
             {source_name || 'Unknown Source'}
           </Typography>
-
-          {/* future ones */}
-          {/* <Typography variant="caption" color="text.secondary">
-            News | US | {new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </Typography> */}
-
-          {/* Title */}
           <Link
             href={url}
             target="_blank"
@@ -114,65 +241,16 @@ export function NewsCard({ article }) {
           >
             {title}
           </Link>
-
-          {/* Snippet */}
-          {/* <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 1 }}
-          >
-            {snippet || 'Lorem ipsum preview text of the news article...'}
-          </Typography> */}
-
-          {/* Highlighted Word */}
-          {/* <Box sx={{ mt: 1 }}>
-            <Chip
-              label={keyword}
-              variant="outlined"
-              size="small"
-              sx={{ fontWeight: 500, fontSize: 12 }}
-            />
-          </Box> */}
-
-          {/* Bottom Stats */}
-           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <Typography variant="caption" color="text.secondary">
-              {date}
+              {new Date(date).toLocaleDateString()}
             </Typography>
-            {/*<Typography variant="caption" color="text.secondary">
-              {views}
-            </Typography>*/}
-          </Box> 
+          </Box>
         </Box>
       </Box>
-
-      {/* Flag/Image & Sentiment */}
-      {/* <Box sx={{ textAlign: 'right' }}>
-        {image && (
-          <img
-            src={image}
-            alt="news visual"
-            style={{
-              width: 60,
-              height: 40,
-              objectFit: 'cover',
-              borderRadius: 4,
-              marginBottom: 8,
-            }}
-          />
-        )}
-        <Typography
-          variant="caption"
-          color="error"
-          sx={{ fontWeight: 500 }}
-        >
-          {sentiment}
-        </Typography>
-      </Box> */}
     </Box>
   );
 }
-
 
 // UI list of articles or social mentions
 const Mentions = () => {
