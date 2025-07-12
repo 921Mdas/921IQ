@@ -24,9 +24,12 @@ export const useSearchStore = create((set) => ({
   total_articles: 0,
   trend_data: [],
   selectedSources: [],
+  isLoading: false,
 
   
   setError: (error) => set({ error }), // ← new
+  setLoading: (loading) => set({ isLoading: loading }),
+
 
   // Actions
   setQuery: (query) => set({ query }),

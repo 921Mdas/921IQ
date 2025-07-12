@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 import dateparser
 from datetime import datetime
 import time
+import dateparser
+
 
 # Only needed once, during app start
 nltk.download("punkt")
@@ -93,7 +95,7 @@ def extract_sur7cd_date(url):
         date = convert_date(raw_date) if raw_date else datetime.now()
         return date
     except Exception as e:
-        print(f"❌ Failed to fetch date from {url} — {e}")
+        print(f"❌ in helper.py Failed to fetch date from {url} — {e}")
         return datetime.now()
 
 
@@ -103,6 +105,9 @@ def testSoup(url):
     return soup
 
 
+
+def parse_date(date_str, lang="fr"):
+    return dateparser.parse(date_str, languages=[lang])
 
 
 def find_ads(soup):

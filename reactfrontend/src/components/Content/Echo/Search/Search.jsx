@@ -105,6 +105,7 @@ function BooleanSearch() {
       top_countries,
       trend_data
     }) => {
+      console.log('arts', articles)
       store.setArticles(articles);
       store.setTopCountries(top_countries);
       store.setTopPublications(top_publications);
@@ -114,6 +115,7 @@ function BooleanSearch() {
     });
 
     api.getSummary(apiParams).then(({ summary }) => {
+      console.log('summary front end', summary)
       store.setSummary(summary);
     });
 
@@ -254,6 +256,7 @@ const mergedQuery = {
 
     // Fetch summary separately
     const { summary } = await api.getSummary(mergedQuery);
+    console.log('final summary', summary)
     useSearchStore.getState().setSummary(summary);
 
   } catch (err) {
@@ -340,6 +343,7 @@ useSearchStore.getState().setSelectedSources(sources);
         gap: 1,
         gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
         alignItems: "center",
+        padding:'1em'
       }}
       noValidate
       autoComplete="off"
@@ -349,17 +353,11 @@ useSearchStore.getState().setSelectedSources(sources);
       {renderInputGroup("not", "Keyword NOT")}
  <Box
   sx={{
-    border: "1px solid #cfcfcf",
     borderRadius: 2,
     padding: 2,
-    backgroundColor: "white",
-    minWidth: 300,
+    maxWidth: 150,
     maxHeight: 200,
     overflowY: "auto",
-    flexGrow: 1,
-    gridColumn: "1 / -1",
-    display: "flex",
-    flexDirection: "column",
     gap: 1,
   }}
 >
@@ -369,21 +367,13 @@ useSearchStore.getState().setSelectedSources(sources);
     }}
   />
 </Box>
-      <Box
-        sx={{
-          gridColumn: "1 / -1",
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 2,
-          mt: 1,
-          flexWrap: "wrap",
-          
-        }}
+<Box
+
         className="buttons-container"
       >
         
         <Button variant="outlined" onClick={clearAll} sx={{
-            fontSize: 10,
+            fontSize: 13,
         }}>
           Clear
         </Button>
@@ -394,7 +384,9 @@ useSearchStore.getState().setSelectedSources(sources);
           sx={{
             backgroundColor: '#3129d9',
             color: '#fff',
-            fontSize: 10,
+            fontSize: 13,
+            width:100,
+            fontWeight:'bold',
             '&:hover': {
               backgroundColor: '#251f9a',
             },

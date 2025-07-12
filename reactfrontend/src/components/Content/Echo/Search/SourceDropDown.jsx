@@ -171,7 +171,7 @@ const SourceSelector = ({ onSelect }) => {
           "&:hover": { opacity: 0.8 },
         }}
       >
-        <Typography variant="body1">Source type</Typography>
+        <Typography variant="body1" sx={{fontWeight:'bold'}}>Source</Typography>
         <ExpandMoreIcon fontSize="small" sx={{ ml: 0.5 }} />
       </Box>
 

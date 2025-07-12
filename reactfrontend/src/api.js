@@ -32,18 +32,31 @@ const getMockArticles = () => [{
 }];
 
 
+
 export const api = {
-  getSummary: async (params = {}) => {
-    try {
-      const response = await apiClient.get('/get_summary', { params });
-      getStoreState().setSummary(response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Summary error:", error);
-      getStoreState().setError(error.message);
-      throw error;
-    }
-  },
+
+getSummary: async (params) => {
+
+  try {
+    const response = await apiClient.get(`/get_summary`, {
+      params,
+      headers: {
+        'Accept': 'application/json' // Explicitly request JSON
+      },
+      timeout: 45000
+    });
+    console.log('API Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error("API Error:", {
+      message: error.message,
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    throw error;
+  }
+},
 
 getData: async (params = {}) => {
   try {
@@ -73,16 +86,24 @@ getData: async (params = {}) => {
         .forEach(source => urlParams.append('source', source));
     }
 
-    console.log('Final URL params:', urlParams.toString());
-
-    const response = await apiClient.get('/get_data', {
+    useSearchStore.getState().setLoading(true);
+   try{
+      const response = await apiClient.get('/get_data', {
       params: urlParams,
       // Remove custom serializer since we're handling it manually
       paramsSerializer: params => params.toString()
     });
 
+ 
+
     getStoreState().setArticles(response.data);
     return response.data;
+
+   }finally{
+    useSearchStore.getState().setLoading(false);
+    
+   }
+  
   } catch (error) {
     console.error("Data error:", error);
     getStoreState().setArticles(getMockArticles());
