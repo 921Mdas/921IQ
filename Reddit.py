@@ -44,5 +44,5 @@ def RedditScrap():
         print("✅ Reddit scraping completed.")
 
     except Exception as e:
-        print("❌ Reddit scraping failed:")
+        print("❌ in Reddit: Reddit scraping failed:")
         print(e)

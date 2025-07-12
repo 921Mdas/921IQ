@@ -75,5 +75,43 @@ scraper_news_sources = {
             "country": "Dem. Rep. Congo",
             "source_logo": "<your_base64_logo_here>"
         }
+    },
+"MediaCongo": {
+    "config": {
+        "base_url": "https://www.mediacongo.net/articles.html",
+        "get_articles": lambda soup: soup.select("div.article-item, div.latest-news-item, div.article_other_item"),
+        "get_title": lambda article: article.select_one("h2 a, h3 a, h4 a, p > a:nth-of-type(2)"),
+        "get_date": lambda article: article.select_one("span.date, time.date, div.article-date, span.article_other_about"),
+        "get_url": lambda article, base_url: urljoin(base_url, article.select_one("a")["href"]),
+        "process_date": lambda tag: convert_date(tag.text.strip().split(",")[0]) if tag else None,
+        "get_image": lambda article: (
+            article.select_one("img")["data-src"]
+            if article.select_one("img") and article.select_one("img").has_attr("data-src")
+            else article.select_one("img")["src"]
+            if article.select_one("img")
+            else None
+        ),
+        "get_description": lambda article: article.select_one("div.article-excerpt, p.excerpt, p"),
+        "get_content": lambda soup: "\n".join([
+            p.text.strip() for p in soup.select("div.article-content p")
+            if p.text.strip()
+        ])
+    },
+    "source_meta": {
+        "source_name": "MediaCongo",
+        "country": "Dem. Rep. Congo",
+        "source_logo": "https://www.mediacongo.net/images/logo.png",
+        "language": "French",
+        "categories": ["news", "politics", "society", "economy"],
+        "bias": "independent",
+        "popularity_rank": 1,
+        "fact_checking": "mixed",
+        "social_media": {
+            "twitter": "@MediaCongoNews",
+            "facebook": "MediaCongoOfficial"
+        }
     }
+}
+
+
 }

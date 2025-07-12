@@ -5,10 +5,12 @@
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-rows: 1fr 40px ;
   align-items: stretch;  /* changed from center to stretch */
   max-width: inherit;
   width: inherit; /* make sure it grows to parent width */
   margin: 0;
+  background-color: var(--color-white);
 
 }
 
@@ -17,13 +19,11 @@
 }
 
 .buttons-container {
-  grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
   gap: 16px;
-  margin-top: 2px !important;
-  margin-bottom: 2px;
   flex-wrap: wrap;
+  grid-column: 3/-1;
 }
 
 
@@ -45,3 +45,5 @@
     min-width: 120px;
   }
 }
+
+

@@ -38,7 +38,7 @@
   .Content {
     grid-area: content;
     background: var(--color-gray-100);
-    padding: var(--fs-md);
+
 
   }
 
@@ -113,43 +113,6 @@
   }
 }
 
-
-//   @media (max-width: 768px) {
-
-// .layout {
-//   display: flex;
-//   flex-direction: column;
-//   height: 100vh; // This is critical for proper scrolling behavior
-//   width: 100vw;
-//   overflow: hidden; // prevent global page scrolling
-
-//   .Nav {
-//     height: var(--nav-height);
-//     background: var(--color-white);
-//     padding: var(--fs-md);
-//     border-bottom: solid 1px var(--color-gray-200);
-//     flex-shrink: 0;
-//     position: sticky;
-//     top: 0;
-//     z-index: 10;
-//   }
-
-//   .Content {
-//     flex: 1;
-//     overflow-y: auto;
-//     background: var(--color-gray-100);
-//     padding: var(--fs-md);
-//   }
-
-//   .Aside {
-//     display: none;
-//   }
-
-
-// }
-
-
-//   }
 
 
 // reusables

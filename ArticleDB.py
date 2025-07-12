@@ -3,7 +3,7 @@ import psycopg2
 def runDB(data: list):
     try:
         conn = psycopg2.connect(
-            dbname="echo",
+            dbname="echo_db",
             user="vongaimusvaire",
             password="MySushi32",
             host="localhost",
@@ -101,7 +101,7 @@ def runDB(data: list):
         print(f"🔄 {updated_article_count} article(s) updated successfully!")
 
     except psycopg2.Error as e:
-        print("❌ Failed to connect to or operate on the database")
+        print("❌ in ArticleDB: Failed to connect to or operate on the database")
         print("Error:", e)
 
     finally:

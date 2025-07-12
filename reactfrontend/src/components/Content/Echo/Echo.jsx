@@ -80,20 +80,7 @@ const Echo = () => {
           </div>
         </div>
       )}
-      {/* <div className='responsive-container'>
-      
-        <div className='articles-column'>
-          <Mentions />
-        </div>
-
  
-        <div
-          ref={analyticsRef}
-          className={`widgets-column analytics ${showAnalytics ? 'active' : ''}`}
-        >
-          <MentionsAnalytics />
-        </div>
-      </div> */}
     </div>
   )
 }
