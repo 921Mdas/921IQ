@@ -281,9 +281,10 @@ def get_summary():
         if conn:
             conn.close()
 
-print("Registered routes:")
+print("\nAvailable routes:")
 for rule in app.url_map.iter_rules():
-    print(f"- {rule}")
+    if "static" not in rule.endpoint:  # Skip Flask's static routes
+        print(f"- {rule}")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
