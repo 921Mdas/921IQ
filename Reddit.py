@@ -1,9 +1,9 @@
-# RedditScraper.py
 import os
 from dotenv import load_dotenv
 import praw
 from datetime import datetime
 from ArticleDB import runDB
+from typing import Dict, Any
 
 load_dotenv()
 
@@ -14,18 +14,30 @@ reddit = praw.Reddit(
     user_agent="Echo by 921IQ"
 )
 
-def reddit_to_article(post):
+def truncate(text: str, max_length: int) -> str:
+    """Safely truncate text to specified length"""
+    return text[:max_length] if text else text
+
+def reddit_to_article(post) -> Dict[str, Any]:
+    """Convert Reddit post to article dictionary with length validation"""
+    first_comment = "unknown"
+    try:
+        if post.comments:
+            first_comment = truncate(post.comments[0].body, 500)
+    except Exception:
+        pass
+
     return {
-        'title': post.title,
-        'url': f"https://www.reddit.com{post.permalink}",
+        'title': truncate(post.title, 300),
+        'url': truncate(f"https://www.reddit.com{post.permalink}", 500),
         'date': datetime.utcfromtimestamp(post.created_utc),
         'source_name': "Reddit",
         'source_logo': "https://www.redditstatic.com/icon.png",
-        'author': post.author.name if post.author else "unknown",
-        'category': post.subreddit.display_name,
-        'body_intro': (post.selftext or post.title)[:300],
+        'author': truncate(post.author.name if post.author else "unknown", 100),
+        'category': truncate(post.subreddit.display_name, 100),
+        'body_intro': truncate((post.selftext or post.title), 500),
         'named_entities': [],
-        'first_comment': "unknown",
+        'first_comment': first_comment,
         'ad_slots': [],
         'country': "global",
         'reach': post.score,
@@ -34,15 +46,22 @@ def reddit_to_article(post):
 
 def RedditScrap():
     try:
+        print("🔄 Starting Reddit scraping...")
         articles = []
-        for post in reddit.subreddit("all").hot(limit=10):
+        
+        # Get hot posts from multiple categories
+        for post in reddit.subreddit("worldnews+news+technology").hot(limit=15):
             articles.append(reddit_to_article(post))
 
         if articles:
+            print(f"📊 Found {len(articles)} Reddit posts")
             runDB(articles)
+            print("✅ Reddit scraping completed successfully")
+        else:
+            print("⚠️ No Reddit posts found")
 
-        print("✅ Reddit scraping completed.")
-
+    except praw.exceptions.PRAWException as e:
+        print(f"🔴 PRAW Error: {str(e)}")
     except Exception as e:
-        print("❌ in Reddit: Reddit scraping failed:")
-        print(e)
+        print("❌ Reddit scraping failed:")
+        print(f"Error: {str(e)}")

@@ -1,41 +1,20 @@
-# React + Vite
+from urllib.parse import urljoin
+from helper import convert_date, extract_sur7cd_date
+from functools import partial
+import cachetools
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Configure cache for article listings (1 hour TTL)
+listing_cache = cachetools.TTLCache(maxsize=1000, ttl=3600)
 
-Currently, two official plugins are available:
+def make_article_lambda(selector):
+    """Factory for article selector lambdas"""
+    return lambda soup: soup.select(selector)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+def make_element_lambda(selector):
+    """Factory for element selector lambdas"""
+    return lambda article: article.select_one(selector)
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-
-
-
-
-#GPT Prompt and project description
-
-Initial instructions:
-
-Let's disuss, im building a scalable media monitoring tool, meaning I will scraping at least 1000 publications by the end of this year. 
-
-I need a solid architecture, error handling, validation and performance to make sure I can concurrently run my scrapers and keep the database clean.
-
-I will walk you through each one of my files in order so you can see how i am currently operating. I dont need you to complicate things rather focus on the above KPIs and where reusability is needed suggest, pleasse stick to one file at a time and wait for me to tell you to go next, im not an expert so multiple suggestions get me lost and i cant follow 
-
-#instruction log
-
-SourceBase_DRC_News improvement
-
-Let's disuss, im building a scalable media monitoring tool, meaning I will scraping at least 1000 publications by the end of this year. 
-
-I need a solid architecture, error handling, validation and performance to make sure I can concurrently run my scrapers and keep the database clean.
-
-I will walk you through each one of my files in order so you can see how i am currently operating. I dont need you to complicate things rather focus on the above KPIs and where reusability is needed suggest, pleasse stick to one file at a time and wait for me to tell you to go next, im not an expert so multiple suggestions get me lost and i cant follow
-
-1. Im using beautifulsoup html parser and i broke the initial beautifulSoup code in 2 for scalability and ease of use, I took the classes, urls and other meta_data and put them in another file that looks like this 
-
+scraper_news_sources = {
  
     "ActuCD": {
     "config": {
@@ -77,11 +56,11 @@ I will walk you through each one of my files in order so you can see how i am cu
         "category": "general",
     }
 }
+}
 
-Then imported them in a reusable function so I can store multiple publication config here in one place and import them instead of having individual files with the same function processing this data.
-
-Let's start on this file, you can see the souce logo has too many characters.
-Besides that I need you to scan the publication and ensure all necessary metadata you can collect on the publication is included like country, readership, any datapoint that could be useful. Let's improve this config and dont go beyond.
-
-
-
+# Add dynamic priority sorting
+PRIORITY_ORDER = {1: 0, 2: 1, 3: 2}
+scraper_news_sources = dict(sorted(
+    scraper_news_sources.items(),
+    key=lambda x: PRIORITY_ORDER.get(x[1]["config"].get("priority", 3), 3)
+))

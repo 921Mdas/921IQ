@@ -36,7 +36,6 @@ const getMockArticles = () => [{
 export const api = {
 
 getSummary: async (params) => {
-
   try {
     const response = await apiClient.get(`/get_summary`, {
       params,
@@ -63,14 +62,14 @@ getData: async (params = {}) => {
     // Filter and transform sources for URL params
     const filteredParams = {
       ...params,
-      // Remove the sources array from main params
+      // Remove the sources array from main params (we'll handle it manually)
       sources: undefined
     };
 
-    // Create URLSearchParams to handle multiple source params
+    // Create URLSearchParams to handle multiple values properly
     const urlParams = new URLSearchParams();
-    
-    // Add keyword params
+
+    // Add keyword and other params
     Object.entries(filteredParams).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         value.forEach(v => urlParams.append(key, v));
@@ -79,7 +78,7 @@ getData: async (params = {}) => {
       }
     });
 
-    // Add source params with correct naming (singular 'source')
+    // Handle `sources` array separately with correct naming
     if (params.sources) {
       params.sources
         .filter(source => source !== null && source !== undefined && source !== '')
@@ -87,32 +86,50 @@ getData: async (params = {}) => {
     }
 
     useSearchStore.getState().setLoading(true);
-   try{
-      const response = await apiClient.get('/get_data', {
+
+    const response = await apiClient.get('/get_data', {
       params: urlParams,
-      // Remove custom serializer since we're handling it manually
-      paramsSerializer: params => params.toString()
+      paramsSerializer: params => params.toString() // Prevent default serialization
     });
 
- 
+    if (response.data) {
 
-    getStoreState().setArticles(response.data);
-    return response.data;
-
-   }finally{
-    useSearchStore.getState().setLoading(false);
-    
-   }
+    const data = response.data
   
+    console.log('api testing top pubs', data.top_publications)
+
+    useSearchStore.setState({
+        articles: data.articles || [],
+        top_publications: data.top_publications || [],
+        top_countries: data.top_countries || [],
+        wordcloud_data: data.wordcloud_data || [],
+        trend_data: data.trend_data || { labels: [], data: [] },
+        total_articles: data.total_articles || 0,
+        isLoading: false,
+        error: null
+      });
+
+      console.log('api', useSearchStore.getState().top_publications)
+
+    } else {
+      console.error('[API] No data received in response');
+      throw new Error('No data received from API');
+    }
+
+    return response.data;
+    
   } catch (error) {
-    console.error("Data error:", error);
+    useSearchStore.setState({
+      isLoading: false,
+      error: error.message
+    });
+
+    // Optionally: fallback to mock data
     getStoreState().setArticles(getMockArticles());
-    getStoreState().setError(error.message);
+
     throw error;
   }
 }
-
-
 
 };
 

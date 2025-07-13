@@ -209,8 +209,14 @@ export function NewsCard({ article }) {
 // Main mentions component
 const Mentions = () => {
   const articles = useSearchStore((state) => state.articles);
-  const total_articles = useSearchStore((state) => state.total_articles);
   const isLoading = useSearchStore((state) => state.isLoading);
+  
+const total_articles = useSearchStore((state) => state.total_articles);
+
+
+
+
+
 
   return (
     <div className='mentions-container'>

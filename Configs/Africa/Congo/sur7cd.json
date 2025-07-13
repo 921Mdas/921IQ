@@ -1,0 +1,25 @@
+{
+  "$schema": "../../publication_schema.json",
+  "source_id": "sur7cd",
+  "config": {
+    "base_url": "https://7sur7.cd",
+    "selectors": {
+      "article": "div.views-row",
+      "title": "div.views-field-title span.field-content a",
+      "url": "div.views-field-title span.field-content a",
+      "date": null
+    },
+    "required_selectors": ["div.views-row"],
+    "timeout_ms": 60000,
+    "special_functions": {
+      "process_date": "extract_sur7cd_date" 
+    }
+  },
+  "meta": {
+    "source_name": "7sur7.cd",
+    "country": "Congo(DRC)",
+    "source_logo": "data:image/svg+xml;base64,...",
+    "language": "French",
+    "category": "news"
+  }
+}

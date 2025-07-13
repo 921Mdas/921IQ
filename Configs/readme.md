@@ -1,0 +1,1 @@
+This section includes the data of each african publication in separate json files

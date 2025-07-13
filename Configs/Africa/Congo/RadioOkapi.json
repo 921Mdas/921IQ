@@ -1,0 +1,48 @@
+{
+  "$schema": "../../publication_schema.json",
+  "source_id": "radiookapi",
+  "config": {
+    "base_url": "https://www.radiookapi.net",
+    "selectors": {
+      "article": "div.views-row",
+      "title": "h2 > a",
+      "url": "h2 > a",
+      "image": "img"
+    },
+    "date_handling": {
+      "default_to_today": true,
+      "required": false,
+      "strategies": [
+        {
+          "type": "attribute",
+          "selector": "time[datetime]",
+          "attribute": "datetime"
+        },
+        {
+          "type": "text",
+          "selector": "span.date-display-single"
+        },
+        {
+          "type": "text",
+          "selector": "div.submitted",
+          "format": "Publié le %d %b. %Y"  
+        }
+      ]
+    },
+    "required_selectors": ["div.views-row"],
+    "timeout_ms": 60000,
+    "skip_conditions": {
+      "missing_title": true,
+      "missing_url": true,
+      "missing_date": false
+    }
+  },
+  "meta": {
+    "source_name": "Radio Okapi",
+    "country": "Congo(DRC)",
+    "source_logo": "<your_base64_logo_here>",
+    "language": "French",
+    "category": "news",
+    "date_locale": "fr_FR"  
+  }
+}
