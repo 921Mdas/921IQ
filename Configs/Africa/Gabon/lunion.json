@@ -1,0 +1,42 @@
+{
+  "$schema": "../../publication_schema.json",
+  "source_id": "lunion",
+  "config": {
+    "base_url": "https://union.sonapresse.com/",
+    "selectors": {
+      "article": ".text-article, .item",
+      "title": ".titre-article a, .views-field-title a",
+      "url": ".titre-article a, .views-field-title a",
+      "image": ".image-article img, .views-field-field-image img",
+      "image_alt": ".image-article img, .views-field-field-image img",
+      "date": ".categorie-article, .type"
+    },
+    "date_handling": {
+      "default_to_today": true,
+      "required": false,
+      "strategies": [
+        {
+          "type": "text",
+          "selector": ".categorie-article, .type"
+        }
+      ]
+    },
+    "required_selectors": [".titre-article a", ".views-field-title a"],
+    "timeout_ms": 60000,
+    "skip_conditions": {
+      "missing_title": true,
+      "missing_url": true,
+      "missing_date": false
+    }
+  },
+  "meta": {
+    "source_name": "L'Union",
+    "country": "Gabon",
+    "source_logo": "data:image/png;base64,...",
+    "language": "French",
+    "category": "news",
+    "date_locale": "fr_FR",
+    "political_alignment": "government-aligned",
+    "reliability_score": 3.8
+  }
+}

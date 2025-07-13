@@ -1,21 +1,27 @@
-
-
-from urllib.parse import urljoin
-from Scraper import scrape_articles
-from helper import convert_date
-from AfricaNewsSourceBase.SourceBase_DRC_News import scraper_news_sources
+from NewsScrapers.Scraper_engine import scrape_publication
+from NewsScrapers.publication_ids import PUBLICATIONS  # Your existing import
 from ArticleDB import runDB
 
-
-
-
-async def ActuCdScrap(page):
-    source = scraper_news_sources["ActuCD"]
-    config = source["config"]
-    source_meta = source["source_meta"]
- 
-    news = await scrape_articles(page, config, source_meta)  # Note the await here
-
-    print('testing news actu', news)
-    runDB(news)
-    print("[Actucd] Scraper finished.")
+def ActuCdScrap(page):
+    """Main scraping function that handles all publications"""
+    results = {}
+    
+    for pub_id in PUBLICATIONS:
+        try:
+            articles = scrape_publication(pub_id, page)
+            if articles:
+                runDB(articles)
+                results[pub_id] = len(articles)
+            else:
+                results[pub_id] = 0
+        except Exception as e:
+            print(f"❌ {pub_id} failed: {str(e)}")
+            results[pub_id] = None
+    
+    # Print simple report
+    print("\n=== Results ===")
+    for pub_id, count in results.items():
+        status = "✅" if count else "⚠️" if count == 0 else "❌"
+        print(f"{status} {pub_id}: {count or 'No'} articles")
+    
+    return results

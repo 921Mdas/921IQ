@@ -1,0 +1,42 @@
+{
+  "$schema": "../../publication_schema.json",
+  "source_id": "gabonactu",
+  "config": {
+    "base_url": "https://gabonactu.com/",
+    "selectors": {
+      "article": "div.post-boxed",
+      "title": "h3.entry-title a",
+      "url": "h3.entry-title a",
+      "image": "a.post-img",
+      "image_alt": "a.post-img",
+      "date": "div.date"
+    },
+    "date_handling": {
+      "default_to_today": true,
+      "required": false,
+      "strategies": [
+        {
+          "type": "text",
+          "selector": "div.date"
+        }
+      ]
+    },
+    "required_selectors": ["div.post-boxed"],
+    "timeout_ms": 60000,
+    "skip_conditions": {
+      "missing_title": true,
+      "missing_url": true,
+      "missing_date": false
+    }
+  },
+  "meta": {
+    "source_name": "Gabon Actu",
+    "country": "Gabon",
+    "source_logo": "data:image/png;base64,...",
+    "language": "French",
+    "category": "news",
+    "date_locale": "fr_FR",
+    "political_alignment": "independent",
+    "reliability_score": 3.9
+  }
+}

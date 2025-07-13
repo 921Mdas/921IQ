@@ -105,7 +105,9 @@ function BooleanSearch() {
       top_countries,
       trend_data
     }) => {
-      console.log('arts', articles)
+
+   
+
       store.setArticles(articles);
       store.setTopCountries(top_countries);
       store.setTopPublications(top_publications);
@@ -115,7 +117,6 @@ function BooleanSearch() {
     });
 
     api.getSummary(apiParams).then(({ summary }) => {
-      console.log('summary front end', summary)
       store.setSummary(summary);
     });
 
@@ -247,6 +248,8 @@ const mergedQuery = {
       trend_data,
     } = await api.getData(mergedQuery);
 
+
+
     useSearchStore.getState().setArticles(articles);
     useSearchStore.getState().setTopCountries(top_countries);
     useSearchStore.getState().setTopPublications(top_publications);
@@ -256,7 +259,6 @@ const mergedQuery = {
 
     // Fetch summary separately
     const { summary } = await api.getSummary(mergedQuery);
-    console.log('final summary', summary)
     useSearchStore.getState().setSummary(summary);
 
   } catch (err) {
@@ -268,8 +270,6 @@ const mergedQuery = {
   useEffect(() => {
   const urlParams = new URLSearchParams(window.location.search);
 
-  console.log('url paramas')
-  console.log(urlParams.getAll('source'))
   // issue here is that drcongo is included as source amongst the sources we put null
 
 

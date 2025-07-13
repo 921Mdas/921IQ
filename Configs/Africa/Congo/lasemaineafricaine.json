@@ -1,0 +1,42 @@
+{
+  "$schema": "../../publication_schema.json",
+  "source_id": "lasemaineafricaine",
+  "config": {
+    "base_url": "https://www.lasemaineafricaine.info/",
+    "selectors": {
+      "article": "div.td-module-container",
+      "title": "h3.entry-title a",
+      "url": "h3.entry-title a",
+      "image": "div.td-module-thumb a span",
+      "image_alt": "div.td-module-thumb a span",
+      "date": "time.entry-date"
+    },
+    "date_handling": {
+      "default_to_today": true,
+      "required": false,
+      "strategies": [
+        {
+          "type": "text",
+          "selector": "time.entry-date"
+        }
+      ]
+    },
+    "required_selectors": ["article"],
+    "timeout_ms": 60000,
+    "skip_conditions": {
+      "missing_title": true,
+      "missing_url": true,
+      "missing_date": false
+    }
+  },
+  "meta": {
+    "source_name": "La Semaine Africaine",
+    "country": "Congo(DRC)",
+    "source_logo": "data:image/png;base64,...",
+    "language": "French",
+    "category": "news",
+    "date_locale": "fr_FR",
+    "political_alignment": "independent",
+    "reliability_score": 4.0
+  }
+}

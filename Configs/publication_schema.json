@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["source_id", "config", "meta"],
+  "properties": {
+    "source_id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+    "config": {
+      "type": "object",
+      "required": ["base_url", "selectors"],
+      "properties": {
+        "base_url": {"type": "string", "format": "uri"},
+        "selectors": {
+          "type": "object",
+          "required": ["article"],
+          "properties": {
+            "article": {"type": ["array", "string"]},
+            "title": {"type": ["array", "string"]}
+          }
+        }
+      }
+    }
+  }
+}

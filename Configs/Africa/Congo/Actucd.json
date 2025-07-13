@@ -1,0 +1,21 @@
+{
+  "$schema": "../../publication_schema.json",
+  "source_id": "actucd",
+  "config": {
+    "base_url": "https://actualite.cd",
+    "selectors": {
+      "article": "div.what-cap",
+      "title": "h4 > a",
+      "date": "span",
+      "url": "h4 > a"
+    },
+    "required_selectors": ["div.what-cap"],
+    "timeout_ms": 60000
+  },
+  "meta": {
+    "source_name": "Actualite.cd",
+    "country": "Congo(DRC)",
+    "source_logo": "data:image/png;base64,...",
+    "language": "French"
+  }
+}

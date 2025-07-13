@@ -13,6 +13,11 @@ const Echo = () => {
   const [showAnalytics, setShowAnalytics] = useState(false)
   const analyticsRef = useRef(null)
 
+  const store_data = useSearchStore(state => state)
+
+
+  console.log('testing the store across components', )
+
   const toggleAnalytics = () => {
     setShowAnalytics(prev => !prev)
   }
@@ -76,7 +81,7 @@ const Echo = () => {
             ref={analyticsRef}
             className={`widgets-column analytics ${showAnalytics ? 'active' : ''}`}
           >
-            <MentionsAnalytics />
+            <MentionsAnalytics data={store_data} />
           </div>
         </div>
       )}

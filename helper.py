@@ -1,7 +1,5 @@
 from collections import Counter
 from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-import nltk
 import string
 from datetime import datetime
 import requests
@@ -10,6 +8,14 @@ import dateparser
 from datetime import datetime
 import time
 import dateparser
+import nltk
+from nltk.corpus import stopwords
+
+
+from datetime import datetime
+import re
+import logging
+from dateutil.parser import parse  # Requires python-dateutil
 
 
 # Only needed once, during app start
@@ -163,7 +169,7 @@ def find_ads(soup):
     return unique_ads
 
 
-def extract_keywords(titles, top_n=30):
+def extract_keywords_cloud(titles, top_n=30):
     stop_words = set(stopwords.words('english')) | set(stopwords.words('french'))
     all_words = []
 
@@ -179,6 +185,64 @@ def extract_keywords(titles, top_n=30):
     return [{"text": word.title(), "size": count} for word, count in freq.most_common(top_n)]
 
 
+def ensure_nltk_data():
+    try:
+        nltk.data.find('corpora/stopwords')
+    except LookupError:
+        nltk.download('stopwords')
+
+# Call this at startup
+ensure_nltk_data()
+
+def extract_keywords(titles):
+    try:
+        # Ensure stopwords are loaded
+        stop_words = set(stopwords.words('english')).union(set(stopwords.words('french')))
+        # Rest of your keyword extraction logic
+    except Exception as e:
+        logger.error(f"Keyword extraction failed: {str(e)}")
+        return []  # Return empty list as fallback
 
 
+# Set up logger at module level
+logger = logging.getLogger(__name__)
 
+
+def process_article_date(url=None, soup=None, raw_date=None, publication_id=None):
+    """
+    Unified date processor for all publications
+    Args:
+        url: Article URL (for URL-based extraction)
+        soup: BeautifulSoup object (for DOM-based extraction)
+        raw_date: Direct date string to parse
+        publication_id: Used for special cases (e.g., 'sur7cd')
+    """
+    try:
+        # 1. Special Case: 7sur7.cd (date from URL)
+        if publication_id == 'sur7cd' and url:
+            if '/20' in url:  # Check for YYYY/MM/DD pattern
+                date_match = re.search(r'/(\d{4})/(\d{2})/(\d{2})/', url)
+                if date_match:
+                    return f"{date_match[1]}-{date_match[2]}-{date_match[3]}"
+
+        # 2. DOM-based extraction (if soup provided)
+        if soup:
+            date_tag = (soup.select_one('span.date-display-single') or 
+                       soup.select_one('span.submitted') or
+                       soup.select_one('time') or
+                       soup.select_one('span.color1') or  # Actualite.cd
+                       soup.select_one('span.date'))     # Common alternative
+            
+            if date_tag:
+                raw_date = date_tag.get('content', date_tag.text.strip())
+
+        # 3. Fallback to raw_date if provided
+        if raw_date:
+            return convert_date(raw_date)  # Your existing date converter
+
+        # 4. Final fallback
+        return datetime.now().isoformat()
+
+    except Exception as e:
+        print(f"⚠️ Date processing failed: {str(e)}")
+        return datetime.now().isoformat()
