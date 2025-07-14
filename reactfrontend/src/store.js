@@ -124,7 +124,8 @@ const initialState = {
   top_publications: { labels: [], data: [] },
   top_countries: [],
   wordcloud_data: [],
-  trend_data: { labels: [], data: [] }
+  trend_data: { labels: [], data: [] },
+  entities: []
 };
 
 export const useSearchStore = create(
@@ -167,6 +168,10 @@ export const useSearchStore = create(
           ? (hasKeywords(state.query) ? articles : getMockArticles())
           : state.articles
       })),
+
+      setEntities: (entities)=>set({
+        entities: Array.isArray(entities) ? entities : []
+      }),
 
       setSummary: (summary) => set({ 
         summary: typeof summary === 'string' ? summary : null 

@@ -10,6 +10,10 @@ import logging
 import time
 from AI import SummaryGenerator
 
+import spacy
+from collections import defaultdict
+nlp = spacy.load("en_core_web_sm")
+
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
@@ -365,6 +369,79 @@ def get_articles_summary():
             "status": 500
         })
         return jsonify(response), 500
+
+
+
+@app.route("/get_entities", methods=["GET"])
+def get_entities():
+    try:
+        # Step 1: Fetch article titles & dates
+        with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute("""
+                SELECT title, date, source_name, country
+                FROM articles
+                WHERE title IS NOT NULL;
+            """)
+            articles = cursor.fetchall()
+
+        # Step 2: Extract person entities
+        entity_data = defaultdict(lambda: {
+            "name": "",
+            "count": 0,
+            "dates": [],
+            "sources": set(),
+            "countries": set(),
+            "articles": set()
+        })
+
+        for article in articles:
+            title = article["title"]
+            doc = nlp(title)
+
+            for ent in doc.ents:
+                if ent.label_ == "PERSON":
+                    name = ent.text.strip()
+
+                    # Normalize name capitalization (e.g., "joe Biden" -> "Joe Biden")
+                    normalized_name = " ".join([w.capitalize() for w in name.split()])
+
+                    key = normalized_name
+                    entity_data[key]["name"] = normalized_name
+                    entity_data[key]["count"] += 1
+                    entity_data[key]["dates"].append(article["date"])
+                    entity_data[key]["sources"].add(article["source_name"])
+                    entity_data[key]["countries"].add(article["country"])
+                    entity_data[key]["articles"].add(title)
+
+        # Step 3: Prepare ranked list
+        results = []
+        for entity in entity_data.values():
+            # Trend info
+            trend = process_trend_data(entity["dates"])
+            results.append({
+                "name": entity["name"],
+                "count": entity["count"],
+                "article_count": len(entity["articles"]),
+                "source_diversity": len(entity["sources"]),
+                "country_coverage": list(entity["countries"]),
+                "trend": trend
+            })
+
+        # Sort by count
+        top_entities = sorted(results, key=lambda x: x["count"], reverse=True)[:50]
+
+        return jsonify({
+            "top_people": top_entities,
+            "total_entities_found": len(results)
+        })
+
+    except Exception as e:
+        logger.error(f"Error in /get_entities: {str(e)}", exc_info=True)
+        return jsonify({
+            "error": "Internal server error",
+            "details": str(e)
+        }), 500
+
 
 
 if __name__ == "__main__":
