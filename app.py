@@ -98,49 +98,6 @@ def process_trend_data(dates):
     }
 
 
-# def process_trend_data(dates):
-#     """Convert raw dates into trend data"""
-#     date_objs = []
-#     for date in dates:
-#         try:
-#             if isinstance(date, str):
-#                 date_objs.append(datetime.fromisoformat(date))
-#             elif isinstance(date, datetime):
-#                 date_objs.append(date)
-#         except (ValueError, TypeError) as e:
-#             logger.debug(f"Skipping invalid date {date}: {e}")
-#             continue
-    
-#     if not date_objs:
-#         return {"labels": [], "data": []}
-    
-#     def week_start(date):
-#         start = date - timedelta(days=date.weekday())
-#         end = start + timedelta(days=6)
-#         return f"{start.strftime('%b %d')}–{end.strftime('%b %d')}"
-    
-#     week_counts = Counter(week_start(date) for date in date_objs)
-#     sorted_weeks = sorted(
-#         week_counts.keys(),
-#         key=lambda label: datetime.strptime(label.split("–")[0], "%b %d")
-#     )
-    
-#     return {
-#         "labels": sorted_weeks,
-#         "data": [week_counts[week] for week in sorted_weeks]
-#     }
-
-# @app.before_request
-# def initialize_ai_services():
-#     """Verify environment and warm up models"""
-#     try:
-#         logger.info("Initializing AI services...")
-#         get_summarizer()  # This will verify environment and load model
-#         logger.info("AI services ready")
-#     except Exception as e:
-#         logger.critical(f"AI service initialization failed: {str(e)}")
-#         # Consider whether to continue running without AI features
-
 @app.after_request
 def add_cors_headers(response):
     """Add CORS headers to all responses"""

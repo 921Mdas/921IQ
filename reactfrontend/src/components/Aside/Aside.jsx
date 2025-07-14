@@ -10,10 +10,10 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import './Aside.scss';
 
 const menuItems = [
-  { label: 'Home', icon: <HomeIcon />, path: '/' },
-  { label: 'Echo', icon: <EchoIcon />, path: '/echo' },
+  { label: 'Home', icon: <HomeIcon />, path: '/home' },
+  { label: 'Echo', icon: <EchoIcon />, path: '/' },
   { label: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
-  { label: 'Insights', icon: <InsightsIcon />, path: '/insights' },
+  { label: 'Insights', icon: <InsightsIcon />, path: '/insight' },
 ];
 
 const Aside = () => {

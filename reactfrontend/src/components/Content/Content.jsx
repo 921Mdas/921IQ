@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { Routes } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 
 // subcomponents or different routes for the main content UI
 // different features of the App
@@ -11,7 +13,12 @@ import Analytics from './Analytics/Analytics'
 const Content = () => {
   return (
     <div className='Content'>
-       <Echo/>
+        <Routes>
+          <Route path="/" element={<Echo />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/insights" element={<Insight />} />
+      </Routes>
 
     </div>
   )
