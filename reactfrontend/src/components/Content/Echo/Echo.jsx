@@ -16,7 +16,6 @@ const Echo = () => {
   const store_data = useSearchStore(state => state)
 
 
-  console.log('testing the store across components', )
 
   const toggleAnalytics = () => {
     setShowAnalytics(prev => !prev)

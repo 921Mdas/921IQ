@@ -12,50 +12,6 @@ function BooleanSearch() {
   const selectedSources = useSearchStore(state => state.selectedSources);
 
 
-// const removeTag = useCallback((type, value) => {
-//   setKeywords(prev => {
-//     const updated = {
-//       ...prev,
-//       [type]: prev[type].filter(v => v !== value)
-//     };
-
-//     // Update Zustand
-//     useSearchStore.getState().setQuery(updated);
-
-//     // Update URL
-//     const params = new URLSearchParams();
-//     updated.and.forEach(k => params.append("and", k));
-//     updated.or.forEach(k => params.append("or", k));
-//     updated.not.forEach(k => params.append("not", k));
-//     window.history.pushState(null, "", `?${params.toString()}`);
-
-//     // Optionally re-fetch data
-//     api.getData(updated).then(({
-//       articles,
-//       wordcloud_data,
-//       total_articles,
-//       top_publications,
-//       top_countries,
-//       trend_data
-//     }) => {
-//       useSearchStore.getState().setArticles(articles);
-//       useSearchStore.getState().setTopCountries(top_countries);
-//       useSearchStore.getState().setTopPublications(top_publications);
-//       useSearchStore.getState().setWordcloudData(wordcloud_data);
-//       useSearchStore.getState().setTotalArticles(total_articles);
-//       useSearchStore.getState().setTrendData(trend_data);
-//     });
-
-//     api.getSummary(updated).then(({ summary }) => {
-//       useSearchStore.getState().setSummary(summary);
-//     });
-
-//     return updated;
-//   });
-// }, []);
-
-
-
 
   // Health check on backend
   
@@ -197,7 +153,7 @@ const clearAll = () => {
     not: urlParams.getAll("not"),
   };
 
-const mergedQuery = {
+  const mergedQuery = {
   and: Array.from(new Set([...existingQuery.and, ...keywords.and])),
   or: Array.from(new Set([...existingQuery.or, ...keywords.or])),
   not: Array.from(new Set([...existingQuery.not, ...keywords.not])),
@@ -260,6 +216,10 @@ const mergedQuery = {
     // Fetch summary separately
     const { summary } = await api.getSummary(mergedQuery);
     useSearchStore.getState().setSummary(summary);
+
+    // // Fetch entities separately
+    const entities = await api.getEntity()
+    useSearchStore.getState().setEntities(entities)
 
   } catch (err) {
     console.error("Failed to fetch data:", err);

@@ -129,36 +129,29 @@ getData: async (params = {}) => {
 
     throw error;
   }
+},
+// ✅ New Method: getEntity
+// api.js
+getEntity: async (entityName) => {
+  try {
+    const response = await apiClient.get('/get_entities', {
+      params: entityName ? { id: entityName } : undefined,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    console.log('Entity Response:', response.data);
+    return response.data;
+
+  } catch (error) {
+    console.error('getEntity Error:', {
+      message: error.message,
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    throw error;
+  }
 }
 
+
 };
-
-// export const api = {
-//   getSummary: async (params = {}) => {
-//     try {
-//       const response = await apiClient.get('/get_summary', { params });
-//       getStoreState().setSummary(response.data);
-//       return response.data;
-//     } catch (error) {
-//       console.error("Summary error:", error);
-//       getStoreState().setError(error.message);
-//       throw error;
-//     }
-//   },
-
-//   getData: async (params = {}) => {
-//     try {
-//       // console.log('Fetching from:', `${API_BASE}/get_data`);
-//       const response = await apiClient.get('/get_data', { params });
-//       getStoreState().setArticles(response.data);
-//       return response.data;
-//     } catch (error) {
-//       console.error("Data error:", error);
-//       getStoreState().setArticles(getMockArticles());
-//       getStoreState().setError(error.message);
-//       throw error;
-//     }
-//   },
-
-
-// };
