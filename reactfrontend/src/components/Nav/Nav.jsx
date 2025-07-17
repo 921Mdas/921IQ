@@ -28,7 +28,6 @@ const UserSession = () => {
       gap={2}
       sx={{
         padding: '0.2em 1rem',
-        backgroundColor: '#f5f5f5',
         borderRadius: '8px',
       }}
     >

@@ -26,13 +26,12 @@ const AISummary = ({ summary }) => {
     <Card
       variant="outlined"
       sx={{
-        border: '1px solid transparent',
-        borderImage: 'linear-gradient(to right, rgba(1, 1, 143, 0.22), rgba(24, 33, 201, 0.24)) 1',
-        borderRadius: 0,
-        boxShadow: 1,
+        borderRadius: '10px',
+        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
         p: isMobile ? 1 : 2,
         height: isMobile ? 'auto' : 170,
         minHeight: 140,
+        position:'relative'
       }}
     >
       <CardContent sx={{ p: 0 }}>
@@ -40,8 +39,11 @@ const AISummary = ({ summary }) => {
           <Typography
             variant="subtitle2"
             fontWeight="bold"
-            color="primary"
-            fontSize={isMobile ? 11 : 12}
+            fontSize={isMobile ? 11 : 16}
+            sx={{
+              color:
+"#6658d1"
+            }}
           >
             🤖 AI Summary
           </Typography>
@@ -62,6 +64,7 @@ const AISummary = ({ summary }) => {
             mb={2}
             sx={{
               fontSize: isMobile ? '0.75rem' : '0.85rem',
+              minHeight:80,
               lineHeight: 1.5,
             }}
           >
@@ -74,7 +77,7 @@ const AISummary = ({ summary }) => {
           justifyContent="flex-start"
           flexWrap="wrap"
           gap={1}
-          sx={{ fontSize: '0.55rem' }}
+          sx={{ fontSize: '0.55rem',  position:'absolute', bottom:10 }}
         >
           <Tooltip title="Like">
             <IconButton size="small" sx={{ p: 0.3 }}>

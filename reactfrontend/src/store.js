@@ -1,74 +1,4 @@
-// import { create } from 'zustand';
 
-// const getMockArticles = () => [{
-//   id: 'mock-1',
-//   title: 'No keywords entered',
-//   content: 'Please enter keywords to fetch relevant articles.',
-//   isMock: true
-// }];
-
-// const hasKeywords = (query) => {
-//   return query.and.length > 0 || query.or.length > 0 || query.not.length > 0;
-// };
-
-// export const useSearchStore = create((set) => ({
-//   // Initial state
-//   query: { and: [], or: [], not: [] },
-//   articles: [],
-//   summary: null,
-//   analyticsVisible: false,
-//   paginationVisible: false,
-//   total_articles: 0,
-//   selectedSources: [],
-//   isLoading: false,
-//   top_publications: { labels: [], data: [] },
-//   top_countries: [],
-//   wordcloud_data: [],
-//   trend_data: { labels: [], data: [] },
-
-  
-//   setError: (error) => set({ error }), // ← new
-//   setLoading: (loading) => set({ isLoading: loading }),
-
-
-//   // Actions
-//   setQuery: (query) => set({ query }),
-
-//   setSelectedSources: (sources) => set({ selectedSources: sources }),
-  
-//   clearSelectedSources: () => set({ selectedSources: [] }),
-
-//   setArticles: (articles) => set((state) => ({
-//     articles: hasKeywords(state.query) ? articles : getMockArticles()
-//   })),
-
-//   setSummary: (summary) => set({ summary }),
-
-//   toggleAnalytics: () => set((state) => ({
-//     analyticsVisible: !state.analyticsVisible
-//   })),
-
-//   setAnalyticsVisible: (value) => set({ analyticsVisible: value }),
-//   setPaginationVisible: (value) => set({ paginationVisible: value }),
-
-//   // 🆕 Setters for analytics data
-//   setWordcloudData: (data) => set({ wordcloud_data: data }),
-//   setTopPublications: (data) => set({ top_publications: data }),
-//   setTopCountries: (data) => set({ top_countries: data }),
-//   setTotalArticles: (count) => set({ total_articles: count }),
-//   setTrendData: (data) => set({ trend_data: data }),
-
-//   resetAnalytics: () => set({
-//   articles: [],
-//   summary: null,
-//   wordcloud_data: [],
-//   top_publications: [],
-//   top_countries: [],
-//   total_articles: 0,
-//   trend_data: [],
-// })
-
-// }));
 
 
 import { create } from 'zustand';
@@ -125,7 +55,12 @@ const initialState = {
   top_countries: [],
   wordcloud_data: [],
   trend_data: { labels: [], data: [] },
-  entities: []
+  entities: [],
+  activeTab: 'volume', // Default to VOLUME
+  TABS : {
+  VOLUME: 'volume',
+  ENTITIES: 'entities',
+}
 };
 
 export const useSearchStore = create(
@@ -149,6 +84,17 @@ export const useSearchStore = create(
         ...(loading ? { error: null } : {}) // Clear error when loading starts
       }),
 
+       setActiveTab: (tab) => {
+        const validTabs = Object.values(get().TABS);
+        if (validTabs.includes(tab)) {
+          set({ activeTab: tab });
+        }
+      },
+
+      getActiveTab: () => get().activeTab,
+
+      getTabsConfig: () => get().TABS,
+
       setQuery: (query) => set({
         query: {
           and: Array.isArray(query?.and) ? query.and : [],
@@ -156,6 +102,8 @@ export const useSearchStore = create(
           not: Array.isArray(query?.not) ? query.not : []
         }
       }),
+
+
 
       setSelectedSources: (sources) => set({ 
         selectedSources: Array.isArray(sources) ? sources : [] 

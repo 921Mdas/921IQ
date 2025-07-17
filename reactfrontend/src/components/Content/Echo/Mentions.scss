@@ -57,7 +57,12 @@
 .mentions-container{
   max-height: 70vh; /* Or whatever height works for your layout */
   overflow-y: auto; /* Enable vertical scrolling */
+ position: relative;
+}
 
+.header_results{
+  position: relative;
+  width: 100%;
 }
 
 

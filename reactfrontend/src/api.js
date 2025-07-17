@@ -132,26 +132,48 @@ getData: async (params = {}) => {
 },
 // ✅ New Method: getEntity
 // api.js
-getEntity: async (entityName) => {
-  try {
-    const response = await apiClient.get('/get_entities', {
-      params: entityName ? { id: entityName } : undefined,
-      headers: { 'Accept': 'application/json' }
-    });
+// getEntity: async (entityName) => {
+//   try {
+//     const response = await apiClient.get('/get_entities', {
+//       params: entityName ? { id: entityName } : undefined,
+//       headers: { 'Accept': 'application/json' }
+//     });
 
-    console.log('Entity Response:', response.data);
-    return response.data;
+//     const entities = response.data;
+//     useSearchStore.getState().setEntities(entities.top_people)
+//     return response.data;
 
-  } catch (error) {
-    console.error('getEntity Error:', {
-      message: error.message,
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data
-    });
-    throw error;
-  }
+//   } catch (error) {
+//     console.error('getEntity Error:', {
+//       message: error.message,
+//       url: error.config?.url,
+//       status: error.response?.status,
+//       data: error.response?.data
+//     });
+//     throw error;
+//   }
+// }
+getEntity: async (params = {}) => {
+  const urlParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach(v => urlParams.append(key, v));
+    } else {
+      urlParams.append(key, value);
+    }
+  });
+
+  const response = await apiClient.get('/get_entities', {
+    params: urlParams,
+    paramsSerializer: params => params.toString()
+  });
+
+  console.log('data issues', response.data)
+
+  return response.data;
 }
+
 
 
 };

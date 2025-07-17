@@ -10,7 +10,7 @@
   max-width: inherit;
   width: inherit; /* make sure it grows to parent width */
   margin: 0;
-  background-color: var(--color-white);
+  background-color: var(--color-primary-b);
 
 }
 
@@ -24,6 +24,10 @@
   gap: 16px;
   flex-wrap: wrap;
   grid-column: 3/-1;
+}
+
+.css-1byndml{
+  overflow: hidden !important;
 }
 
 

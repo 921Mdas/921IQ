@@ -9,6 +9,18 @@ import psycopg2
 import logging
 import time
 from AI import SummaryGenerator
+from helper import clean_name, enrich_with_wikipedia
+from collections import defaultdict, Counter
+from textblob import TextBlob
+from keybert import KeyBERT
+import re
+from datetime import datetime
+from psycopg2.extras import RealDictCursor
+import wikipedia
+from collections import Counter
+from sklearn.metrics.pairwise import cosine_similarity
+
+
 
 import spacy
 from collections import defaultdict
@@ -21,6 +33,8 @@ CORS(app)
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+kw_model = KeyBERT()
+
 
 summary_generator = SummaryGenerator()
 
@@ -246,21 +260,6 @@ def get_articles_data():
                 "sentiment_distribution": sentiment_dist,
                 "wordcloud_data": wordcloud_data,
                 "total_articles": total_articles,
-            # "analytics": {
-            #     "trend_data": trend_data,
-            #     "top_publications": top_publications,
-            #     "top_countries": top_countries,
-            #     "content_types": content_types,
-            #     "sentiment_distribution": sentiment_dist,
-            #     "wordcloud_data": wordcloud_data,
-            #     "total_articles": total_articles,
-
-            #     "performance_metrics": {
-            #         "processing_time_sec": round(processing_time, 3),
-            #         "articles_per_second": round(articles_per_sec, 1),
-            #         "total_articles": total_articles
-            #     }
-            # },
             "filter_applied": {
                 "received_sources": params['sources'],
                 "actual_filter": params['sources'][1:] if len(params['sources']) > 1 else params['sources']
@@ -370,21 +369,145 @@ def get_articles_summary():
         })
         return jsonify(response), 500
 
+def get_wikipedia_summary(entity_name):
+    try:
+        page = wikipedia.page(entity_name, auto_suggest=False)
+        summary = wikipedia.summary(entity_name, sentences=2, auto_suggest=False)
+
+        # Extract the first image that looks like a person (optional filtering)
+        image_url = ""
+        for img in page.images:
+            if any(ext in img.lower() for ext in [".jpg", ".jpeg", ".png"]) and "logo" not in img.lower():
+                image_url = img
+                break
+
+        return {
+            "summary": summary,
+            "url": page.url,
+            "image": image_url
+        }
+
+    except (wikipedia.DisambiguationError, wikipedia.PageError, wikipedia.HTTPTimeoutError):
+        return {
+            "summary": "No Wikipedia summary available.",
+            "url": "",
+            "image": ""
+        }
+
+def extract_sentiment(titles):
+    sentiment_counts = {"positive": 0, "negative": 0, "neutral": 0}
+    total_score = 0
+
+    for title in titles:
+        blob = TextBlob(title)
+        polarity = blob.sentiment.polarity
+        total_score += polarity
+
+        if polarity > 0.1:
+            sentiment_counts["positive"] += 1
+        elif polarity < -0.1:
+            sentiment_counts["negative"] += 1
+        else:
+            sentiment_counts["neutral"] += 1
+
+    sentiment_counts["overall_score"] = round(total_score / len(titles), 2) if titles else 0
+    return sentiment_counts
+
+
+# def extract_top_topics(titles, top_n=5):
+#     combined_text = ". ".join(titles)
+#     keywords = kw_model.extract_keywords(combined_text, top_n=top_n, stop_words='english')
+#     return [kw[0] for kw in keywords]
+
+def extract_top_topics(titles, top_n=5, diversity_threshold=0.75):
+    # Combine and preprocess titles
+    combined_text = ". ".join(set(titles))  # remove duplicates
+    if not combined_text.strip():
+        return []
+
+    # Extract more candidates than needed to allow filtering
+    candidates = kw_model.extract_keywords(
+        combined_text,
+        keyphrase_ngram_range=(1, 3),
+        stop_words='english',
+        use_maxsum=True,  # maximize relevance + diversity
+        top_n=top_n * 3
+    )
+
+    # Deduplicate and reduce similar phrases
+    unique_keywords = []
+    vectors = []
+
+    for kw, score in candidates:
+        vector = kw_model.model.embed([kw])[0]
+        if all(cosine_similarity([vector], [v])[0][0] < diversity_threshold for v in vectors):
+            unique_keywords.append((kw, score))
+            vectors.append(vector)
+        if len(unique_keywords) >= top_n:
+            break
+
+    return [kw for kw, _ in unique_keywords]
+
+
+def extract_co_mentions(titles, target_name):
+    pattern = re.compile(r'\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)*\b')
+    co_mentions = Counter()
+    for title in titles:
+        candidates = pattern.findall(title)
+        filtered = [c for c in candidates if c != target_name and target_name not in c]
+        co_mentions.update(filtered)
+    return [c for c, _ in co_mentions.most_common(5)]
+
+
+def extract_quotes(titles, person_name):
+    quote_pattern = re.compile(rf'([\w\s]*{re.escape(person_name)}[\w\s]*?said[^.]*\.)', re.IGNORECASE)
+    quotes = []
+    for title in titles:
+        matches = quote_pattern.findall(title)
+        quotes.extend(matches)
+    return quotes[:5]
+
+
 
 
 @app.route("/get_entities", methods=["GET"])
 def get_entities():
     try:
-        # Step 1: Fetch article titles & dates
+        # Step 1: Extract query parameters
+        params = {
+            'and_keywords': [kw for kw in request.args.getlist("and") if kw],
+            'or_keywords': [kw for kw in request.args.getlist("or") if kw],
+            'not_keywords': [kw for kw in request.args.getlist("not") if kw],
+            'sources': [s for s in request.args.getlist("source") if s]
+        }
+
+        logger.info(f"Entity request params: {params}")
+
+        # Step 2: Build WHERE clause
+        where_clause, query_params = build_where_clause(
+            params['and_keywords'],
+            params['or_keywords'],
+            params['not_keywords'],
+            params['sources']
+        )
+
+        # Step 3: Fetch filtered article titles & dates
         with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT title, date, source_name, country
                 FROM articles
-                WHERE title IS NOT NULL;
-            """)
+                WHERE title IS NOT NULL AND {where_clause};
+            """, query_params)
             articles = cursor.fetchall()
 
-        # Step 2: Extract person entities
+        if not articles:
+            return jsonify({
+                "top_people": [],
+                "total_entities_found": 0,
+                "note": "No articles matched the filters."
+            })
+
+        # Step 4: Extract PERSON entities
         entity_data = defaultdict(lambda: {
             "name": "",
             "count": 0,
@@ -401,33 +524,48 @@ def get_entities():
             for ent in doc.ents:
                 if ent.label_ == "PERSON":
                     name = ent.text.strip()
+                    parts = name.split()
+                    if len(parts) < 2:
+                        continue  # Skip single names
 
-                    # Normalize name capitalization (e.g., "joe Biden" -> "Joe Biden")
-                    normalized_name = " ".join([w.capitalize() for w in name.split()])
+                    normalized_name = " ".join([w.capitalize() for w in parts])
+                    entity = entity_data[normalized_name]
+                    entity["name"] = normalized_name
+                    entity["count"] += 1
+                    entity["dates"].append(article["date"])
+                    entity["sources"].add(article["source_name"])
+                    entity["countries"].add(article["country"])
+                    entity["articles"].add(title)
 
-                    key = normalized_name
-                    entity_data[key]["name"] = normalized_name
-                    entity_data[key]["count"] += 1
-                    entity_data[key]["dates"].append(article["date"])
-                    entity_data[key]["sources"].add(article["source_name"])
-                    entity_data[key]["countries"].add(article["country"])
-                    entity_data[key]["articles"].add(title)
-
-        # Step 3: Prepare ranked list
+        # Step 5: Structure and enrich results
         results = []
         for entity in entity_data.values():
-            # Trend info
+            articles = list(entity["articles"])
             trend = process_trend_data(entity["dates"])
+            sentiment = extract_sentiment(articles)
+            top_topics = extract_top_topics(articles)
+            co_mentions = extract_co_mentions(articles, entity["name"])
+            quotes = extract_quotes(articles, entity["name"])
+
+            wiki_info = get_wikipedia_summary(entity["name"])
+
             results.append({
                 "name": entity["name"],
                 "count": entity["count"],
-                "article_count": len(entity["articles"]),
+                "article_count": len(articles),
+                "sentiment": sentiment,
+                "top_topics": top_topics,
+                "trend": trend,
+                "co_mentions": co_mentions,
+                "top_quotes": quotes,
+                "sources": list(entity["sources"]),
                 "source_diversity": len(entity["sources"]),
                 "country_coverage": list(entity["countries"]),
-                "trend": trend
+                "wiki_summary": wiki_info["summary"],
+                "wiki_url": wiki_info["url"],
+                "wiki_image": wiki_info["image"]
             })
 
-        # Sort by count
         top_entities = sorted(results, key=lambda x: x["count"], reverse=True)[:50]
 
         return jsonify({
@@ -436,12 +574,115 @@ def get_entities():
         })
 
     except Exception as e:
-        logger.error(f"Error in /get_entities: {str(e)}", exc_info=True)
-        return jsonify({
-            "error": "Internal server error",
-            "details": str(e)
-        }), 500
+        logger.exception("Error processing get_entities request")
+        return jsonify({"error": str(e)}), 500
 
+
+# @app.route("/get_entities", methods=["GET"])
+# def get_entities():
+#     try:
+#         # Step 1: Extract query parameters
+#         params = {
+#             'and_keywords': [kw for kw in request.args.getlist("and") if kw],
+#             'or_keywords': [kw for kw in request.args.getlist("or") if kw],
+#             'not_keywords': [kw for kw in request.args.getlist("not") if kw],
+#             'sources': [s for s in request.args.getlist("source") if s]
+#         }
+
+#         logger.info(f"Entity request params: {params}")
+
+#         # Step 2: Build WHERE clause
+#         where_clause, query_params = build_where_clause(
+#             params['and_keywords'],
+#             params['or_keywords'],
+#             params['not_keywords'],
+#             params['sources']
+#         )
+
+#         # Step 3: Fetch filtered article titles & dates
+#         with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cursor:
+#             cursor.execute(f"""
+#                 SELECT title, date, source_name, country
+#                 FROM articles
+#                 WHERE title IS NOT NULL AND {where_clause};
+#             """, query_params)
+#             articles = cursor.fetchall()
+
+#         if not articles:
+#             return jsonify({
+#                 "top_people": [],
+#                 "total_entities_found": 0,
+#                 "note": "No articles matched the filters."
+#             })
+
+#         # Step 4: Extract PERSON entities
+#         entity_data = defaultdict(lambda: {
+#             "name": "",
+#             "count": 0,
+#             "dates": [],
+#             "sources": set(),
+#             "countries": set(),
+#             "articles": set()
+#         })
+
+#         for article in articles:
+#             title = article["title"]
+#             doc = nlp(title)
+
+#             for ent in doc.ents:
+#                 if ent.label_ == "PERSON":
+#                     name = ent.text.strip()
+#                     parts = name.split()
+#                     if len(parts) < 2:
+#                         continue  # skip single names
+
+#                     normalized_name = " ".join([w.capitalize() for w in parts])
+
+#                     entity = entity_data[normalized_name]
+#                     entity["name"] = normalized_name
+#                     entity["count"] += 1
+#                     entity["dates"].append(article["date"])
+#                     entity["sources"].add(article["source_name"])
+#                     entity["countries"].add(article["country"])
+#                     entity["articles"].add(title)
+
+#         # Step 5: Structure and enrich results
+#         results = []
+#         for entity in entity_data.values():
+#             articles = list(entity["articles"])
+#             trend = process_trend_data(entity["dates"])
+#             sentiment = extract_sentiment(articles)
+#             top_topics = extract_top_topics(articles)
+#             co_mentions = extract_co_mentions(articles, entity["name"])
+#             quotes = extract_quotes(articles, entity["name"])
+
+#             results.append({
+#                 "name": entity["name"],
+#                 "count": entity["count"],
+#                 "article_count": len(articles),
+#                 "sentiment": sentiment,
+#                 "top_topics": top_topics,
+#                 "trend": trend,
+#                 "co_mentions": co_mentions,
+#                 "top_quotes": quotes,
+#                 "sources": list(entity["sources"]),
+#                 "source_diversity": len(entity["sources"]),
+#                 "country_coverage": list(entity["countries"])
+#             })
+
+#         top_entities = sorted(results, key=lambda x: x["count"], reverse=True)[:50]
+
+#         return jsonify({
+#             "top_people": top_entities,
+#             "total_entities_found": len(results)
+#         })
+
+#     except Exception as e:
+#         logger.error(f"Error in /get_entities: {str(e)}", exc_info=True)
+#         return jsonify({
+#             "error": "Internal server error",
+#             "details": str(e)
+#         }), 500
 
 
 if __name__ == "__main__":

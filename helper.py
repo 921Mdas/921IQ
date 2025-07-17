@@ -23,6 +23,37 @@ nltk.download("punkt")
 nltk.download("stopwords")
 
 
+from flask import request, jsonify
+from collections import defaultdict
+from psycopg2.extras import RealDictCursor
+import requests
+
+# List of known titles to strip
+TITLE_PREFIXES = {"President", "Dr", "Mr", "Mrs", "Ms", "Sir", "Madam", "Lord"}
+# Optional whitelist of single-word famous people to keep
+SINGLE_NAME_WHITELIST = {"Trump", "Putin", "Madonna", "Biden", "Zelenskyy"}
+
+def clean_name(name):
+    """Normalize name by removing common titles and capitalizing properly."""
+    tokens = name.split()
+    filtered = [t for t in tokens if t not in TITLE_PREFIXES]
+    return " ".join([w.capitalize() for w in filtered])
+
+def enrich_with_wikipedia(name):
+    """Enrich entity data with Wikipedia summary and link."""
+    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{name.replace(' ', '_')}"
+    try:
+        response = requests.get(url, timeout=2)
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                "description": data.get("extract", ""),
+                "wikilink": data.get("content_urls", {}).get("desktop", {}).get("page")
+            }
+    except Exception as e:
+        logger.warning(f"Wikipedia fetch failed for {name}: {e}")
+    return None
+
 
 
 def fetch_with_retries(url, retries=3, backoff=5):
