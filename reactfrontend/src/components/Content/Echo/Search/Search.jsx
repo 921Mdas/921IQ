@@ -5,6 +5,7 @@ import { TextField, Chip, Box, Button } from "@mui/material";
 import { useSearchStore } from "../../../../store";
 import { api } from "../../../../api";
 import SourceSelector from "./SourceDropDown";
+import ActiveTABS from "../ActiveTABS";
 
 function BooleanSearch() {
   const [keywords, setKeywords] = useState({ and: [], or: [], not: [] });
@@ -218,8 +219,8 @@ const clearAll = () => {
     useSearchStore.getState().setSummary(summary);
 
     // // Fetch entities separately
-    const entities = await api.getEntity()
-    useSearchStore.getState().setEntities(entities)
+    const entities = await api.getEntity(mergedQuery)
+    useSearchStore.getState().setEntities(entities.top_people)
 
   } catch (err) {
     console.error("Failed to fetch data:", err);
@@ -254,7 +255,7 @@ useSearchStore.getState().setSelectedSources(sources);
   const renderInputGroup = (type, label) => (
     <Box
       sx={{
-        border: "1px solid #cfcfcf",
+        border: "1px solid rgba(207, 207, 207, 0.44)",
         borderRadius: 2,
         padding: 1,
         display: "flex",
@@ -326,14 +327,17 @@ useSearchStore.getState().setSelectedSources(sources);
       useSearchStore.getState().setSelectedSources(selected);
     }}
   />
-</Box>
-<Box
+ </Box> 
+ <ActiveTABS />
+ <Box
 
         className="buttons-container"
       >
         
-        <Button variant="outlined" onClick={clearAll} sx={{
+        <Button  onClick={clearAll} sx={{
             fontSize: 13,
+            color:'#6658d1',
+            border:'solid 1px #6658d1'
         }}>
           Clear
         </Button>
@@ -342,7 +346,7 @@ useSearchStore.getState().setSelectedSources(sources);
           type="submit"
           disableElevation
           sx={{
-            backgroundColor: '#3129d9',
+            backgroundColor: '#6658d1',
             color: '#fff',
             fontSize: 13,
             width:100,

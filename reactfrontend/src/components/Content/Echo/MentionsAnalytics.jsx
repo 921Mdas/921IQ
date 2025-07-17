@@ -52,12 +52,6 @@ Chart.register(
 );
 
 const MentionsAnalytics = ({data}) => {
-//   const summary = useSearchStore(state => state.summary);
-//   const isLoading = useSearchStore(state => state.isLoading);
-// const top_publications = useSearchStore(state => state.top_publications || []);
-// const top_countries = useSearchStore(state => state.top_countries || []);
-// const wordcloud_data = useSearchStore(state => state.wordcloud_data || []);
-// const trend_data = useSearchStore(state => state.trend_data || { labels: [], data: [] });
 
 const {summary, isLoading, trend_data, wordcloud_data, top_publications, top_countries} = data;
 
@@ -94,82 +88,6 @@ const {summary, isLoading, trend_data, wordcloud_data, top_publications, top_cou
     </div>
   );
 };
-
-// const AISummary = ({ summary }) => {
-//   const isLoading = !summary;
-
-//   return (
-//     <Card
-//       variant="outlined"
-//       sx={{
-//         border: '1px solid transparent',
-//         borderImage: 'linear-gradient(to right,rgba(1, 1, 143, 0.22),rgba(24, 33, 201, 0.24)) 1',
-//         borderRadius: 0,
-//         boxShadow: 1,
-//         p: 1,
-//         height: 170
-//       }}
-//     >
-//       <CardContent>
-//         <Box display="flex" alignItems="center" gap={1} mb={1}>
-//           <AutoAwesomeIcon color="secondary" fontSize="small" />
-//           <Typography variant="subtitle2" fontWeight="bold" color="primary" fontSize={12}>
-//             AI-Powered Insight
-//           </Typography>
-//         </Box>
-
-//         {isLoading ? (
-//           <Skeleton
-//             variant="rectangular"
-//             width="100%"
-//             height={60}
-//             animation="pulse"
-//             sx={{
-//               borderRadius: 1,
-//               mb: 2,
-//             }}
-//           />
-//         ) : (
-//           <Typography variant="body2" color="text.primary" mb={2}>
-//             {summary}
-//           </Typography>
-//         )}
-
-//         <Box 
-//           display="flex" 
-//           justifyContent="flex-start" 
-//           gap={0.5} 
-//           sx={{ fontSize: '0.55rem' }}
-//         >
-//           <Tooltip title="Like">
-//             <IconButton size="small" sx={{ p: 0.3 }}>
-//               <ThumbUpAltOutlinedIcon fontSize="inherit" />
-//             </IconButton>
-//           </Tooltip>
-//           <Tooltip title="Dislike">
-//             <IconButton size="small" sx={{ p: 0.3 }}>
-//               <ThumbDownAltOutlinedIcon fontSize="inherit" />
-//             </IconButton>
-//           </Tooltip>
-//           <Tooltip title="Refresh">
-//             <IconButton size="small" sx={{ p: 0.3 }}>
-//               <LoopIcon fontSize="inherit" />
-//             </IconButton>
-//           </Tooltip>
-//           <Tooltip title="Copy to Clipboard">
-//             <IconButton 
-//               size="small" 
-//               sx={{ p: 0.3 }} 
-//               onClick={() => navigator.clipboard.writeText(summary)}
-//             >
-//               <ContentCopyIcon fontSize="inherit" />
-//             </IconButton>
-//           </Tooltip>
-//         </Box>
-//       </CardContent>
-//     </Card>
-//   );
-// };
 
 
 

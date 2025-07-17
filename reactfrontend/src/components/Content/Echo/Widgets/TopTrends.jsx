@@ -15,7 +15,6 @@ const TrendAreaChart = React.memo(({ data }) => {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
 
-  console.log('testing trend data', data);
 
   useEffect(() => {
     if (!data?.labels?.length || !canvasRef.current) return;

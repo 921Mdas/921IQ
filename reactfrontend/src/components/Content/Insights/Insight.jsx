@@ -1,10 +1,14 @@
-import React from 'react'
-import "./Insight.scss"
+import React from 'react';
+import ConstructionIcon from '@mui/icons-material/Construction';
+import Construction from '../../UnderConstruct/Construction';
+import './Insight.scss';
 
 const Insight = () => {
-  return (
-    <div>Insight</div>
-  )
-}
+    const info = {
+    message:'This feature is currently under development. Stay tuned for powerful insights!',
+    feature:'Insights'
+  }
+  return  <Construction data={info} />
+};
 
-export default Insight
+export default Insight;

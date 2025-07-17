@@ -1,0 +1,40 @@
+.echo_tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+  width: 25vw;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #000;
+  padding: 0;
+  /* Complete outline removal for all browsers */
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-focus-ring-color: transparent;
+}
+
+.tab-button.active {
+  color: #6658d1; /* Purple color */
+}
+
+.tab-icon {
+  font-size: 1.1rem;
+}
+
+/* Nuclear option for removing ALL focus styles */
+.tab-button:focus, 
+.tab-button:focus-visible,
+.tab-button:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
