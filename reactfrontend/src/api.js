@@ -4,6 +4,8 @@ import qs from 'qs';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+export const API_AUTH_URL = "http://127.0.0.1:8000/auth";
+
 
 const apiClient = axios.create({
   baseURL: API_BASE,
@@ -171,42 +173,6 @@ getEntity: async (params = {}) => {
 }
 
 
-// getEntity: async (params = {}) => {
-
-//   const urlParams = new URLSearchParams();
-//   useSearchStore.getState().setIsLoadingEntity(true);
-
-
-//   try{
-
-
-    
-//       Object.entries(params).forEach(([key, value]) => {
-//         if (Array.isArray(value)) {
-//           value.forEach(v => urlParams.append(key, v));
-//         } else {
-//           urlParams.append(key, value);
-//         }
-//       });
-    
-//       const response = await apiClient.get('/get_entities', {
-//         params: urlParams,
-//         paramsSerializer: params => params.toString()
-//       });
-    
-    
-//       return response.data;
-
-//   }catch(error){
-//     console.log('getting entities in api', error)
-//     useSearchStore.getState().setEntity(null);
-
-//   }finally{
-//     useSearchStore.getState().setIsLoadingEntity(false);
-
-//   }
-
-// }
 
 
 

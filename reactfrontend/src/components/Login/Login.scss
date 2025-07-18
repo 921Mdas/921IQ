@@ -100,8 +100,14 @@
 .auth-remember {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 6px;
   font-size: 0.9rem;
+
+  span{
+  height: 3vh;
+
+  }
 }
 
 .auth-submit {
@@ -134,4 +140,23 @@
   margin-top: 1.5rem;
   font-size: 0.85rem;
   color: #999;
+}
+
+
+.password-input {
+  position: relative;
+
+  input {
+    width: 100%;
+    padding-right: 40px;
+  }
+
+  .eye-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
+  }
 }
