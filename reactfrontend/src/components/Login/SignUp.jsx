@@ -1,6 +1,7 @@
 // Signup.jsx
 import React from 'react';
 import GoogleIcon from '@mui/icons-material/Google';
+import { Link } from 'react-router-dom';
 import './Login.scss'; // reuse same styles for consistency
 
 const Signup = () => {
@@ -28,8 +29,8 @@ const Signup = () => {
         </form>
 
         <div className="auth-links">
-          <a href="/login">Already have an account?</a>
-          <a href="/support">Contact support</a>
+            <Link to="/login">Already have an account?</Link>
+            <Link to="/support">Contact support</Link>
         </div>
       </div>
     </div>

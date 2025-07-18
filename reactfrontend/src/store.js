@@ -57,9 +57,12 @@ const initialState = {
   trend_data: { labels: [], data: [] },
   entities: [],
   activeTab: 'volume', // Default to VOLUME
+  isLoadingEntity: false,
   TABS : {
   VOLUME: 'volume',
   ENTITIES: 'entities',
+  isLoadingSummary: false,
+
 }
 };
 
@@ -95,6 +98,7 @@ export const useSearchStore = create(
 
       getTabsConfig: () => get().TABS,
 
+
       setQuery: (query) => set({
         query: {
           and: Array.isArray(query?.and) ? query.and : [],
@@ -103,7 +107,9 @@ export const useSearchStore = create(
         }
       }),
 
+      setIsLoadingSummary: (isLoading) => set({ isLoadingSummary: isLoading }),
 
+      setIsLoadingEntity: (isLoading) => set({ isLoadingEntity: isLoading }),
 
       setSelectedSources: (sources) => set({ 
         selectedSources: Array.isArray(sources) ? sources : [] 

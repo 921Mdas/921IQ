@@ -8,16 +8,21 @@ import {
   Filler,
   Tooltip,
 } from 'chart.js';
+import { useSearchStore } from '../../../../store';
 
 Chart.register(LineElement, LinearScale, PointElement, CategoryScale, Filler, Tooltip);
 
-const TrendAreaChart = React.memo(({ data }) => {
+const TrendAreaChart = () => {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
+  const labels = useSearchStore(state => state.trend_data?.labels || []);
+  const dataTrend = useSearchStore(state => state.trend_data?.data || []);
 
+
+    console.log('testing trends', dataTrend, labels)
 
   useEffect(() => {
-    if (!data?.labels?.length || !canvasRef.current) return;
+    if (!labels.length || !canvasRef.current) return;
 
     const ctx = canvasRef.current.getContext('2d');
 
@@ -28,9 +33,9 @@ const TrendAreaChart = React.memo(({ data }) => {
     chartRef.current = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.labels,
+        labels,
         datasets: [{
-          data: data.data,
+          data: dataTrend,
           backgroundColor: 'rgba(79, 70, 229, 0.2)', // Indigo fill
           borderColor: 'transparent',
           pointRadius: 0,
@@ -42,14 +47,11 @@ const TrendAreaChart = React.memo(({ data }) => {
         responsive: true,
         maintainAspectRatio: false,
         layout: {
-          padding: {
-            top: 20, // Add some top padding to avoid clipping
-          },
+          padding: { top: 20 },
         },
         plugins: {
           legend: { display: false },
           tooltip: { mode: 'index', intersect: false },
-          title: { display: false },
         },
         scales: {
           x: {
@@ -63,36 +65,34 @@ const TrendAreaChart = React.memo(({ data }) => {
           y: {
             grid: { display: false },
             ticks: {
-              display: true,       // Show y-axis labels
+              display: true,
               color: '#9CA3AF',
               font: { size: 12 },
               padding: 4,
             },
             beginAtZero: true,
-            suggestedMax: data?.data?.length ? Math.max(...data.data) + 2 : 10, // Headroom above max data point
+            suggestedMax: dataTrend.length ? Math.max(...dataTrend) + 2 : 10,
           },
         },
       },
     });
 
+    console.log('testing trends', dataTrend, labels)
+
     return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy();
-      }
+      chartRef.current?.destroy();
     };
-  }, [data]);
+  }, [dataTrend, labels]);
 
   return (
     <div style={{ width: '100%' }}>
-      <div
-        style={{
-          fontSize: '14px',
-          fontWeight: '600',
-          marginBottom: '8px',
-          color: '#111827', // Tailwind's gray-900
-          textAlign: 'center',
-        }}
-      >
+      <div style={{
+        fontSize: '14px',
+        fontWeight: '600',
+        marginBottom: '8px',
+        color: '#111827',
+        textAlign: 'center',
+      }}>
         📈 Mentions Trend
       </div>
       <div style={{ width: '100%', height: '200px', position: 'relative' }}>
@@ -100,6 +100,6 @@ const TrendAreaChart = React.memo(({ data }) => {
       </div>
     </div>
   );
-});
+};
 
-export default TrendAreaChart;
+export default React.memo(TrendAreaChart);

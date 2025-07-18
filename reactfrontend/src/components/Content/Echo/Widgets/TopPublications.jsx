@@ -11,6 +11,7 @@ import {
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Bar } from 'react-chartjs-2';
 import { Box, Typography } from '@mui/material';
+import { useSearchStore } from '../../../../store';
 
 // Register required chart.js components
 ChartJS.register(
@@ -23,7 +24,11 @@ ChartJS.register(
   ChartDataLabels // Register the plugin
 );
 
-const TopPublicationsChart = React.memo(({ data }) => {
+const TopPublicationsChart = React.memo(() => {
+
+  const data = useSearchStore(state => state.top_publications)
+
+
   if (!Array.isArray(data) || data.length === 0) {
     return (
       <Box textAlign="center" p={2}>

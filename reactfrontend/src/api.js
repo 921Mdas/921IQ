@@ -36,6 +36,8 @@ const getMockArticles = () => [{
 export const api = {
 
 getSummary: async (params) => {
+  useSearchStore.getState().setIsLoadingSummary(true);
+
   try {
     const response = await apiClient.get(`/get_summary`, {
       params,
@@ -44,9 +46,18 @@ getSummary: async (params) => {
       },
       timeout: 45000
     });
-    console.log('API Response:', response.data);
+
+    const summary = response?.data.summary
+
+    if(summary){
+        useSearchStore.getState().setSummary(summary)
+
+    }
+
+
     return response.data;
   } catch (error) {
+    useSearchStore.getState().setSummary(null);
     console.error("API Error:", {
       message: error.message,
       url: error.config?.url,
@@ -54,6 +65,8 @@ getSummary: async (params) => {
       data: error.response?.data
     });
     throw error;
+  }finally{
+    useSearchStore.getState().setIsLoadingSummary(false);
   }
 },
 
@@ -96,7 +109,6 @@ getData: async (params = {}) => {
 
     const data = response.data
   
-    console.log('api testing top pubs', data.top_publications)
 
     useSearchStore.setState({
         articles: data.articles || [],
@@ -109,7 +121,6 @@ getData: async (params = {}) => {
         error: null
       });
 
-      console.log('api', useSearchStore.getState().top_publications)
 
     } else {
       console.error('[API] No data received in response');
@@ -130,49 +141,72 @@ getData: async (params = {}) => {
     throw error;
   }
 },
-// ✅ New Method: getEntity
-// api.js
-// getEntity: async (entityName) => {
-//   try {
-//     const response = await apiClient.get('/get_entities', {
-//       params: entityName ? { id: entityName } : undefined,
-//       headers: { 'Accept': 'application/json' }
-//     });
 
-//     const entities = response.data;
-//     useSearchStore.getState().setEntities(entities.top_people)
-//     return response.data;
-
-//   } catch (error) {
-//     console.error('getEntity Error:', {
-//       message: error.message,
-//       url: error.config?.url,
-//       status: error.response?.status,
-//       data: error.response?.data
-//     });
-//     throw error;
-//   }
-// }
 getEntity: async (params = {}) => {
   const urlParams = new URLSearchParams();
+  useSearchStore.getState().setEntities([]); // Clear results for proper loader
+  useSearchStore.getState().setIsLoadingEntity(true);
 
-  Object.entries(params).forEach(([key, value]) => {
-    if (Array.isArray(value)) {
-      value.forEach(v => urlParams.append(key, v));
-    } else {
-      urlParams.append(key, value);
-    }
-  });
+  try {
+    Object.entries(params).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach(v => urlParams.append(key, v));
+      } else {
+        urlParams.append(key, value);
+      }
+    });
 
-  const response = await apiClient.get('/get_entities', {
-    params: urlParams,
-    paramsSerializer: params => params.toString()
-  });
+    const response = await apiClient.get('/get_entities', {
+      params: urlParams,
+      paramsSerializer: params => params.toString()
+    });
 
-  console.log('data issues', response.data)
-
-  return response.data;
+    return response.data;
+  } catch (error) {
+    console.log('getting entities in api', error);
+    useSearchStore.getState().setEntities([]);
+  } finally {
+    useSearchStore.getState().setIsLoadingEntity(false);
+  }
 }
+
+
+// getEntity: async (params = {}) => {
+
+//   const urlParams = new URLSearchParams();
+//   useSearchStore.getState().setIsLoadingEntity(true);
+
+
+//   try{
+
+
+    
+//       Object.entries(params).forEach(([key, value]) => {
+//         if (Array.isArray(value)) {
+//           value.forEach(v => urlParams.append(key, v));
+//         } else {
+//           urlParams.append(key, value);
+//         }
+//       });
+    
+//       const response = await apiClient.get('/get_entities', {
+//         params: urlParams,
+//         paramsSerializer: params => params.toString()
+//       });
+    
+    
+//       return response.data;
+
+//   }catch(error){
+//     console.log('getting entities in api', error)
+//     useSearchStore.getState().setEntity(null);
+
+//   }finally{
+//     useSearchStore.getState().setIsLoadingEntity(false);
+
+//   }
+
+// }
 
 
 
