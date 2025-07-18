@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { useSearchStore } from '../../../../store';
 
 Chart.register(ChartDataLabels);
 
@@ -11,10 +12,12 @@ const countryFlagEmojiMap = {
   // add more as needed
 };
 
-const TopCountriesChart = React.memo(({ data }) => {
+const TopCountriesChart = React.memo(() => {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
+  const data = useSearchStore(state => state.top_countries)
   const maxValue = Math.max(...data.map(d => d.count));
+  
 
 
   useEffect(() => {

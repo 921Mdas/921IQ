@@ -217,6 +217,7 @@ const clearAll = () => {
     // Fetch summary separately
     const { summary } = await api.getSummary(mergedQuery);
     useSearchStore.getState().setSummary(summary);
+    console.log('tshidi', summary)
 
     // // Fetch entities separately
     const entities = await api.getEntity(mergedQuery)

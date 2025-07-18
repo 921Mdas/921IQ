@@ -1,6 +1,8 @@
 // Login.jsx
 import React from 'react';
 import GoogleIcon from '@mui/icons-material/Google';
+import { Link } from 'react-router-dom';
+
 import './Login.scss';
 
 const Login = () => {
@@ -31,8 +33,9 @@ const Login = () => {
         </form>
 
         <div className="auth-links">
-          <a href="/signup">Create an account</a>
-          <a href="/support">Contact support</a>
+        <Link to="/signup">Create an account</Link>
+         <Link to="/contact">Contact Us</Link>
+
         </div>
 
         <p className="auth-footer">Monitor News and Social Content with AI</p>

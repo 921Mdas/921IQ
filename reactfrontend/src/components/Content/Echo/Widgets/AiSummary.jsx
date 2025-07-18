@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -16,11 +16,15 @@ import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
 import LoopIcon from '@mui/icons-material/Loop';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { useSearchStore } from '../../../../store';
 
-const AISummary = ({ summary }) => {
-  const isLoading = !summary;
+const AISummary = () => {
+  const summary = useSearchStore(state => state.summary)
+  const isLoading = useSearchStore(state => state.isLoadingSummary);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+
 
   return (
     <Card
@@ -50,13 +54,30 @@ const AISummary = ({ summary }) => {
         </Box>
 
         {isLoading ? (
+          <>
           <Skeleton
             variant="rectangular"
             width="100%"
-            height={60}
+            height={15}
             animation="pulse"
             sx={{ borderRadius: 1, mb: 2 }}
           />
+          <Skeleton
+            variant="rectangular"
+            width="70%"
+            height={15}
+            animation="pulse"
+            sx={{ borderRadius: 1, mb: 2 }}
+          />
+          <Skeleton
+            variant="rectangular"
+            width="40%"
+            height={15}
+            animation="pulse"
+            sx={{ borderRadius: 1, mb: 2 }}
+          />
+          
+          </>
         ) : (
           <Typography
             variant="body2"

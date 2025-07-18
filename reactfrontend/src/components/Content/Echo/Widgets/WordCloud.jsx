@@ -1,13 +1,15 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import cloud from 'd3-cloud';
+import { useSearchStore } from '../../../../store';
 
-const WordCloud = ({ words, width = 500, height = 300, title = " ↑ Top Keywords" }) => {
+const WordCloud = ({  width = 500, height = 300, title = " ↑ Top Keywords" }) => {
   const containerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const layoutInstance = useRef(null);
   const svgRef = useRef(null);
+  const words = useSearchStore(state => state.wordcloud_data)
 
   // Cleanup function
   const cleanup = () => {

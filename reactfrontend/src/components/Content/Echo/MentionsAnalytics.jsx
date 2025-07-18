@@ -12,6 +12,8 @@ import {
   Legend,
   Tooltip as ChartTooltip,
 } from 'chart.js';
+import { shallow } from 'zustand/shallow';
+
 
 // widgets
 import WordCloud from './Widgets/WordCloud';
@@ -19,6 +21,7 @@ import TopPublicationsChart from './Widgets/TopPublications';
 import TopCountriesChart from './Widgets/TopCountries';
 import TrendAreaChart from './Widgets/TopTrends';
 import AISummary from './Widgets/AiSummary';
+import { useSearchStore } from '../../../store';
 
 import {
   Card,
@@ -60,6 +63,8 @@ const {summary, isLoading, trend_data, wordcloud_data, top_publications, top_cou
     typeof summary === 'string' ? summary : summary?.summary || ''
   ), [summary]);
 
+
+
   if (isLoading) {
     return <div className="loading-analytics">Loading analytics...</div>;
   }
@@ -67,19 +72,19 @@ const {summary, isLoading, trend_data, wordcloud_data, top_publications, top_cou
   return (
     <div className="mentions-analytics">
       <div className="ai_summary">
-        <AISummary summary={summaryValue} />
+        <AISummary  />
       </div>
 
       <div className="trend_line">
-        <TrendAreaChart data={trend_data} />
+        <TrendAreaChart   />
       </div>
 
       <div className="word_cloud">
-        <WordCloud words={wordcloud_data} />
+        <WordCloud />
       </div>
 
       <div className="top_pub">
-        <TopPublicationsChart data={top_publications} />
+        <TopPublicationsChart />
       </div>
 
       <div className="top_countries">
