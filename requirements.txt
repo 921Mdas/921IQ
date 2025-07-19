@@ -1,5 +1,5 @@
-setuptools>=65.0.0
-wheel>=0.40.0
+setuptools>=42
+wheel
 build>=1.0.3
 absl-py==2.3.1
 aiofiles==24.1.0
