@@ -3,7 +3,7 @@ import Construction from '../../UnderConstruct/Construction'
 
 const Analytics = () => {
   const info = {
-    message:'This feature is currently under development. Stay tuned for powerful insights!',
+    message:'This feature is currently under development. Stay tuned for powerful Analytics',
     feature:'Analytics'
   }
   return (

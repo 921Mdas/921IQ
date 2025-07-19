@@ -1,5 +1,6 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import { Avatar, Typography, Box } from '@mui/material';
+
 import './Nav.scss'
 
 // icons import
@@ -14,12 +15,23 @@ const Logo = ()=>{
 }
 
 // user session info
-const user = {
-  name: 'Jane Doe',
-  avatarUrl: 'https://i.pravatar.cc/150?img=8',
-};
 
 const UserSession = () => {
+const [user, setUser] = useState({
+  full_name: '',
+  avatarUrl: 'https://i.pravatar.cc/150?img=8', // default avatar
+});
+
+useEffect(() => {
+  const storedName = localStorage.getItem('fullname');
+  if (storedName) {
+    setUser((prev) => ({
+      ...prev,
+      full_name: storedName,
+    }));
+  }
+}, []);
+
   return (
     <div className="user">
     <Box
@@ -31,11 +43,11 @@ const UserSession = () => {
         borderRadius: '8px',
       }}
     >
-      <Avatar src={user.avatarUrl} alt={user.name} />
+      <Avatar src={user.avatarUrl} alt={user.full_name} />
 
       <Typography variant="body1" fontWeight="900">
-        {user.name}
-      </Typography>
+  {user.full_name}
+</Typography>
     </Box>
     </div>
   );

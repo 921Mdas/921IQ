@@ -50,7 +50,7 @@ const Signup = () => {
       <div className="auth-card">
         <h2 className="auth-title">Create an Echo Account</h2>
 
-        <button className="auth-google-btn">
+        <button className="auth-google-btn" disabled={true}>
           <GoogleIcon className="auth-google-icon" />
           Sign up with Google
         </button>

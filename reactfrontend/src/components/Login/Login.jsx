@@ -38,7 +38,7 @@ const Login = () => {
       <div className="auth-card">
         <h2 className="auth-title">Echo</h2>
 
-        <button className="auth-google-btn">
+        <button className="auth-google-btn" disabled={true}>
           <GoogleIcon className="auth-google-icon" />
           Sign in with Google
         </button>

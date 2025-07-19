@@ -152,8 +152,6 @@ export const useSearchStore = create(
             
               labels: Array.isArray(data.labels) ? data.labels : [],
               data: Array.isArray(data.data) ? data.data : []
-            
-  
       }),
 
       setTopCountries: (data) => set({ 
