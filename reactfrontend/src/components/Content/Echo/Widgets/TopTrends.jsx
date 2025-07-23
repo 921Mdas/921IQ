@@ -19,7 +19,6 @@ const TrendAreaChart = () => {
   const dataTrend = useSearchStore(state => state.trend_data?.data || []);
 
 
-    console.log('testing trends', dataTrend, labels)
 
   useEffect(() => {
     if (!labels.length || !canvasRef.current) return;
@@ -77,7 +76,6 @@ const TrendAreaChart = () => {
       },
     });
 
-    console.log('testing trends', dataTrend, labels)
 
     return () => {
       chartRef.current?.destroy();

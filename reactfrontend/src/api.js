@@ -1,12 +1,21 @@
+
+
 import axios from 'axios';
 import { useSearchStore } from './store';
 import qs from 'qs';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Environment Configuration
+const API_BASE = import.meta.env.MODE === 'production'
+  ? 'https://nine21iq.onrender.com'
+  : 'http://localhost:5000';
 
-export const API_AUTH_URL = "http://127.0.0.1:8000/auth";
+export const API_AUTH_URL = import.meta.env.MODE === 'production'
+  ? 'https://nine21iq.onrender.com/auth'
+  : 'http://127.0.0.1:8000/auth';
 
+console.log('xxxx', API_AUTH_URL, API_BASE  )
 
+// Axios Client Configuration
 const apiClient = axios.create({
   baseURL: API_BASE,
   timeout: 30000,
@@ -14,18 +23,36 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  paramsSerializer: params => {
-    return qs.stringify(params, { arrayFormat: 'repeat' });
-  }
+  paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' })
 });
 
-// Add interceptors for debugging
+// Request Interceptor for logging/debugging
 apiClient.interceptors.request.use(config => {
+  if (import.meta.env.MODE === 'development') {
+    console.log('Request:', config.method?.toUpperCase(), config.url);
+    if (config.params) console.log('Params:', config.params);
+    if (config.data) console.log('Data:', config.data);
+  }
   return config;
 });
 
-const getStoreState = () => useSearchStore.getState();
+// Response Interceptor for error handling
+apiClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (import.meta.env.MODE === 'development') {
+      console.error('API Error:', {
+        message: error.message,
+        url: error.config?.url,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+    }
+    return Promise.reject(error);
+  }
+);
 
+// Mock Data for fallback
 const getMockArticles = () => [{
   id: 'mock-1',
   title: 'Service Unavailable',
@@ -33,147 +60,290 @@ const getMockArticles = () => [{
   isMock: true
 }];
 
-
-
+// API Service Methods
 export const api = {
+  /**
+   * Fetch summary data from API
+   * @param {Object} params - Search parameters
+   */
+  getSummary: async (params) => {
+    const store = useSearchStore.getState();
+    store.setIsLoadingSummary(true);
 
-getSummary: async (params) => {
-  useSearchStore.getState().setIsLoadingSummary(true);
-
-  try {
-    const response = await apiClient.get(`/get_summary`, {
-      params,
-      headers: {
-        'Accept': 'application/json' // Explicitly request JSON
-      },
-      timeout: 45000
-    });
-
-    const summary = response?.data.summary
-
-    if(summary){
-        useSearchStore.getState().setSummary(summary)
-
-    }
-
-
-    return response.data;
-  } catch (error) {
-    useSearchStore.getState().setSummary(null);
-    console.error("API Error:", {
-      message: error.message,
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data
-    });
-    throw error;
-  }finally{
-    useSearchStore.getState().setIsLoadingSummary(false);
-  }
-},
-
-getData: async (params = {}) => {
-  try {
-    // Filter and transform sources for URL params
-    const filteredParams = {
-      ...params,
-      // Remove the sources array from main params (we'll handle it manually)
-      sources: undefined
-    };
-
-    // Create URLSearchParams to handle multiple values properly
-    const urlParams = new URLSearchParams();
-
-    // Add keyword and other params
-    Object.entries(filteredParams).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value.forEach(v => urlParams.append(key, v));
-      } else if (value !== undefined && value !== null) {
-        urlParams.append(key, value);
-      }
-    });
-
-    // Handle `sources` array separately with correct naming
-    if (params.sources) {
-      params.sources
-        .filter(source => source !== null && source !== undefined && source !== '')
-        .forEach(source => urlParams.append('source', source));
-    }
-
-    useSearchStore.getState().setLoading(true);
-
-    const response = await apiClient.get('/get_data', {
-      params: urlParams,
-      paramsSerializer: params => params.toString() // Prevent default serialization
-    });
-
-    if (response.data) {
-
-    const data = response.data
-  
-
-    useSearchStore.setState({
-        articles: data.articles || [],
-        top_publications: data.top_publications || [],
-        top_countries: data.top_countries || [],
-        wordcloud_data: data.wordcloud_data || [],
-        trend_data: data.trend_data || { labels: [], data: [] },
-        total_articles: data.total_articles || 0,
-        isLoading: false,
-        error: null
+    try {
+      const response = await apiClient.get('/get_summary', {
+        params,
+        headers: { 'Accept': 'application/json' },
+        timeout: 45000
       });
 
-
-    } else {
-      console.error('[API] No data received in response');
-      throw new Error('No data received from API');
-    }
-
-    return response.data;
-    
-  } catch (error) {
-    useSearchStore.setState({
-      isLoading: false,
-      error: error.message
-    });
-
-    // Optionally: fallback to mock data
-    getStoreState().setArticles(getMockArticles());
-
-    throw error;
-  }
-},
-
-getEntity: async (params = {}) => {
-  const urlParams = new URLSearchParams();
-  useSearchStore.getState().setEntities([]); // Clear results for proper loader
-  useSearchStore.getState().setIsLoadingEntity(true);
-
-  try {
-    Object.entries(params).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value.forEach(v => urlParams.append(key, v));
-      } else {
-        urlParams.append(key, value);
+      if (response.data?.summary) {
+        store.setSummary(response.data.summary);
       }
-    });
 
-    const response = await apiClient.get('/get_entities', {
-      params: urlParams,
-      paramsSerializer: params => params.toString()
-    });
+      return response.data;
+    } catch (error) {
+      store.setSummary(null);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Summary Error:', error);
+      }
+      throw error;
+    } finally {
+      store.setIsLoadingSummary(false);
+    }
+  },
 
-    return response.data;
-  } catch (error) {
-    console.log('getting entities in api', error);
-    useSearchStore.getState().setEntities([]);
-  } finally {
-    useSearchStore.getState().setIsLoadingEntity(false);
-  }
-}
+  /**
+   * Fetch article data with filters
+   * @param {Object} params - Filter parameters
+   */
+  getData: async (params = {}) => {
+    const store = useSearchStore.getState();
+    store.setLoading(true);
+
+    try {
+      // Prepare URL parameters
+      const urlParams = new URLSearchParams();
+
+      // Add all parameters except sources
+      Object.entries(params).forEach(([key, value]) => {
+        if (key !== 'sources' && value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach(v => urlParams.append(key, v));
+          } else {
+            urlParams.append(key, value);
+          }
+        }
+      });
+
+      // Handle sources separately
+      if (params.sources?.length) {
+        params.sources
+          .filter(source => source)
+          .forEach(source => urlParams.append('source', source));
+      }
+
+      const response = await apiClient.get('/get_data', {
+        params: urlParams,
+        paramsSerializer: params => params.toString()
+      });
+
+      const data = response.data
 
 
+      if (data) {
+        console.log('let verify ', data.top_publications )
+        store.setArticles(data.articles || []);
+        store.setTopPublications(data.top_publications || []);
+        store.setLoading(false);
+      }
 
+      return response.data;
+    } catch (error) {
+      store.setState({
+        isLoading: false,
+        error: error.message
+      });
+
+      // Fallback to mock data in development
+      if (import.meta.env.MODE === 'development') {
+        store.setArticles(getMockArticles());
+      }
+
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch entity data
+   * @param {Object} params - Entity search parameters
+   */
+  getEntity: async (params = {}) => {
+    const store = useSearchStore.getState();
+    store.setEntities([]);
+    store.setIsLoadingEntity(true);
+
+    try {
+      const urlParams = new URLSearchParams();
+      
+      Object.entries(params).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => urlParams.append(key, v));
+        } else if (value !== undefined && value !== null) {
+          urlParams.append(key, value);
+        }
+      });
+
+      const response = await apiClient.get('/get_entities', {
+        params: urlParams,
+        paramsSerializer: params => params.toString()
+      });
+
+      return response.data;
+    } catch (error) {
+      store.setEntities([]);
+      throw error;
+    } finally {
+      store.setIsLoadingEntity(false);
+    }
+  },
+
+  /**
+   * Health check endpoint
+   */
+  checkHealth: async () => {
+    try {
+      const response = await apiClient.get('/health');
+      return response.data;
+    } catch (error) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('Health check failed:', error);
+      }
+      throw error;
+    }
+  },
 
 
 };
+
+// import axios from 'axios';
+// import { useSearchStore } from './store';
+// import qs from 'qs';
+
+// // Environment Configuration
+// const API_BASE = import.meta.env.MODE === 'production'
+//   ? 'https://nine21iq.onrender.com'
+//   : 'http://localhost:5000';
+
+// export const API_AUTH_URL = import.meta.env.MODE === 'production'
+//   ? 'https://nine21iq.onrender.com/auth'
+//   : 'http://127.0.0.1:8000/auth';
+
+// const apiClient = axios.create({
+//   baseURL: API_BASE,
+//   timeout: 30000,
+//   headers: { 'Content-Type': 'application/json' },
+//   paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' })
+// });
+
+// // Request Interceptor
+// apiClient.interceptors.request.use(config => {
+//   if (import.meta.env.MODE === 'development') {
+//     console.log('Request:', config.method?.toUpperCase(), config.url);
+//     if (config.params) console.log('Params:', config.params);
+//     if (config.data) console.log('Data:', config.data);
+//   }
+//   return config;
+// });
+
+// // Response Interceptor
+// apiClient.interceptors.response.use(
+//   response => response,
+//   error => {
+//     if (import.meta.env.MODE === 'development') {
+//       console.error('API Error:', {
+//         message: error.message,
+//         url: error.config?.url,
+//         status: error.response?.status,
+//         data: error.response?.data
+//       });
+//     }
+//     return Promise.reject(error);
+//   }
+// );
+
+// export const api = {
+//   getSummary: async (params) => {
+//     const store = useSearchStore.getState();
+//     store.setIsLoadingSummary(true);
+
+//     try {
+//       const response = await apiClient.get('/get_summary', { 
+//         params,
+//         timeout: 45000
+//       });
+
+//       if (response.data?.summary) {
+//         store.setSummary(response.data.summary);
+//       }
+//       return response.data;
+//     } catch (error) {
+//       store.setSummary(null);
+//       store.setError(error.message);
+//       throw error;
+//     } finally {
+//       store.setIsLoadingSummary(false);
+//     }
+//   },
+
+//   getData: async (params = {}) => {
+//     const store = useSearchStore.getState();
+//     store.setLoading(true);
+//     store.setError(null);
+
+//     try {
+//       const urlParams = new URLSearchParams();
+      
+//       // Add all parameters
+//       Object.entries(params).forEach(([key, value]) => {
+//         if (Array.isArray(value)) {
+//           value.forEach(v => urlParams.append(key, v));
+//         } else if (value !== undefined && value !== null) {
+//           urlParams.append(key, value);
+//         }
+//       });
+
+//       const response = await apiClient.get('/get_data', { params: urlParams });
+//       const data = response.data;
+
+//       if (data) {
+//         // Using individual setters with proper fallbacks
+//         store.setArticles(data.articles || []);
+//         store.setTopPublications({
+//           labels: data.top_publications?.labels || [],
+//           data: data.top_publications?.data || []
+//         });
+//         store.setTopCountries(data.top_countries || []);
+//         store.setWordcloudData(data.wordcloud_data || []);
+//         store.setTotalArticles(data.total_articles || 0);
+//         store.setTrendData({
+//           labels: data.trend_data?.labels || [],
+//           data: data.trend_data?.data || []
+//         });
+//       }
+
+//       return data;
+//     } catch (error) {
+//       store.setLoading(false);
+//       store.setError(error.message);
+//       throw error;
+//     }
+//   },
+
+//   getEntity: async (params = {}) => {
+//     const store = useSearchStore.getState();
+//     store.setEntities([]);
+//     store.setIsLoadingEntity(true);
+
+//     try {
+//       const response = await apiClient.get('/get_entities', { params });
+//       store.setEntities(response.data?.entities || response.data?.top_people || []);
+//       return response.data;
+//     } catch (error) {
+//       store.setError(error.message);
+//       throw error;
+//     } finally {
+//       store.setIsLoadingEntity(false);
+//     }
+//   },
+
+//   checkHealth: async () => {
+//     try {
+//       const response = await apiClient.get('/health');
+//       return response.data;
+//     } catch (error) {
+//       console.error('Health check failed:', error);
+//       throw error;
+//     }
+//   }
+// };
