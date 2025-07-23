@@ -18,6 +18,8 @@ export const signupUser = async (formData) => {
 };
 
 export const loginUser = async (formData) => {
+
+  console.log('testing auth url', API_AUTH_URL)
   const response = await fetch(`${API_AUTH_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

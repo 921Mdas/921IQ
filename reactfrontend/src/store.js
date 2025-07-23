@@ -23,7 +23,9 @@ import { persist, createJSONStorage } from 'zustand/middleware';
  * @property {number} total_articles
  * @property {string[]} selectedSources
  * @property {boolean} isLoading
- * @property {{ labels: string[], data: number[] }} top_publications
+
+ * @property {Array<{source_name: string, count: number}>} top_publications  // Changed from {labels, data}
+
  * @property {Array<{country: string, count: number}>} top_countries
  * @property {Array<{text: string, size: number}>} wordcloud_data
  * @property {{ labels: string[], data: number[] }} trend_data
@@ -51,7 +53,7 @@ const initialState = {
   selectedSources: [],
   isLoading: false,
   error: null,
-  top_publications: { labels: [], data: [] },
+  top_publications: [],
   top_countries: [],
   wordcloud_data: [],
   trend_data: { labels: [], data: [] },
@@ -148,10 +150,12 @@ export const useSearchStore = create(
         wordcloud_data: Array.isArray(data) ? data : [] 
       }),
 
-      setTopPublications: (data) => set({ 
-            
-              labels: Array.isArray(data.labels) ? data.labels : [],
-              data: Array.isArray(data.data) ? data.data : []
+      setTopPublications: (publications) => set({ 
+        top_publications: Array.isArray(publications) 
+          ? publications.filter(pub => 
+              pub?.source_name && typeof pub.count === 'number'
+            )
+          : [] 
       }),
 
       setTopCountries: (data) => set({ 
@@ -179,7 +183,9 @@ export const useSearchStore = create(
         
         set({
           wordcloud_data: Array.isArray(data.wordcloud_data) ? data.wordcloud_data : get().wordcloud_data,
-          top_publications: data.top_publications?.labels ? data.top_publications : get().top_publications,
+           top_publications: Array.isArray(data.top_publications) 
+      ? data.top_publications 
+      : get().top_publications,
           top_countries: Array.isArray(data.top_countries) ? data.top_countries : get().top_countries,
           trend_data: data.trend_data?.labels ? data.trend_data : get().trend_data,
           total_articles: Number.isInteger(data.total_articles) ? data.total_articles : get().total_articles,
@@ -193,7 +199,7 @@ export const useSearchStore = create(
         articles: [],
         summary: null,
         wordcloud_data: [],
-        top_publications: { labels: [], data: [] },
+        top_publications: [],
         top_countries: [],
         total_articles: 0,
         trend_data: { labels: [], data: [] },
@@ -219,10 +225,17 @@ export const useSearchStore = create(
         total_articles: state.total_articles
       }),
       version: 1,
-      migrate: (persistedState) => {
-        // Migration logic if store structure changes in future
-        return persistedState;
-      }
+     migrate: (persistedState) => {  // ◄ Add this block (4 spaces indent)
+        if (persistedState.top_publications && 
+            !Array.isArray(persistedState.top_publications)) {
+          persistedState.top_publications = 
+            (persistedState.top_publications.labels || []).map((label, i) => ({
+              source_name: label,
+              count: persistedState.top_publications.data?.[i] || 0
+            }));
+        }
+        return persistedState;  // ◄ Keep this return
+      }  // ◄ Close migrate block
     }
   )
 );

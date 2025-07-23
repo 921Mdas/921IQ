@@ -63,11 +63,13 @@ function BooleanSearch() {
       trend_data
     }) => {
 
+      console.log('are getting top pubs', top_publications)
+
    
 
       store.setArticles(articles);
       store.setTopCountries(top_countries);
-      store.setTopPublications(top_publications);
+      // store.setTopPublications(top_publications);
       store.setWordcloudData(wordcloud_data);
       store.setTotalArticles(total_articles);
       store.setTrendData(trend_data);
@@ -83,12 +85,7 @@ function BooleanSearch() {
   
   
   
-  useEffect(() => {
-    fetch('http://localhost:5000/health')
-      .then(res => res.json())
-      .then(console.log)
-      .catch(console.error);
-  }, []);
+
 
   // Add a tag
   const addTag = (type, value) => {
@@ -194,6 +191,8 @@ const clearAll = () => {
 
   window.history.pushState(null, "", `?${params.toString()}`);
 
+  // 4.5 check health
+
   // 5. Fetch data from API and update Zustand
   try {
     const {
@@ -209,7 +208,7 @@ const clearAll = () => {
 
     useSearchStore.getState().setArticles(articles);
     useSearchStore.getState().setTopCountries(top_countries);
-    useSearchStore.getState().setTopPublications(top_publications);
+    // useSearchStore.getState().setTopPublications(top_publications);
     useSearchStore.getState().setWordcloudData(wordcloud_data);
     useSearchStore.getState().setTotalArticles(total_articles);
     useSearchStore.getState().setTrendData(trend_data);
@@ -217,7 +216,6 @@ const clearAll = () => {
     // Fetch summary separately
     const { summary } = await api.getSummary(mergedQuery);
     useSearchStore.getState().setSummary(summary);
-    console.log('tshidi', summary)
 
     // // Fetch entities separately
     const entities = await api.getEntity(mergedQuery)

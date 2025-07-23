@@ -28,6 +28,10 @@ const TopPublicationsChart = React.memo(() => {
 
   const data = useSearchStore(state => state.top_publications)
 
+  console.log('final test', Array.isArray(data) )
+  console.log('final test', data.length )
+  console.log('final test', data )
+
 
   if (!Array.isArray(data) || data.length === 0) {
     return (

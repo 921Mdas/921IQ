@@ -6,6 +6,5 @@ PUBLICATIONS = [
     "lunion",
     "gabonactu",
     "lasemaineafricaine",
-    "gabonreview"
 
 ]
