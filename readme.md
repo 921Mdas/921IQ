@@ -1,171 +1,171 @@
-<!-- absl-py==2.3.1
-aiofiles==24.1.0
-aiohappyeyeballs==2.6.1
-aiohttp==3.12.14
-aiosignal==1.4.0
-aiosqlite==0.17.0
-annotated-types==0.7.0
-anyio==4.9.0
-astunparse==1.6.3
-async-timeout==5.0.1
-asyncio==3.4.3
-asyncpraw==7.8.1
-asyncprawcore==2.4.0
-attrs==25.3.0
-awscli==1.41.0
-awsebcli==3.25
-bcrypt==4.3.0
-beautifulsoup4==4.13.4
-blessed==1.21.0
-blinker==1.9.0
-blis==1.3.0
-botocore==1.39.0
-bs4==0.0.2
-cachetools==5.5.2
-catalogue==2.0.10
-cement==2.10.14
-certifi==2025.6.15
-cffi==1.17.1
-charset-normalizer==3.4.2
-click==8.2.1
-cloudpathlib==0.21.1
-colorama==0.4.6
-confection==0.1.5
-cryptography==45.0.4
-cymem==2.0.11
-dateparser==1.2.2
-decorator==5.2.1
-Deprecated==1.2.18
-dnspython==2.7.0
-docutils==0.19
-dotenv==0.9.9
-email_validator==2.2.0
-en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl#sha256=1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85
-exceptiongroup==1.3.0
-fabric==3.2.2
-fastapi==0.116.1
-filelock==3.18.0
-Flask==3.1.1
-flask-cors==6.0.1
-flatbuffers==25.2.10
-frozenlist==1.7.0
-fsspec==2025.5.1
-gast==0.6.0
-google-auth==2.40.3
-google-auth-oauthlib==1.2.2
-google-pasta==0.2.0
-greenlet==3.2.3
-grpcio==1.73.1
-h11==0.16.0
-h5py==3.14.0
-hf-xet==1.1.5
-httptools==0.6.4
-huggingface-hub==0.33.4
-idna==3.10
-invoke==2.2.0
-itsdangerous==2.2.0
-Jinja2==3.1.6
-jmespath==1.0.1
-joblib==1.5.1
-keras==2.15.0
-keybert==0.9.0
-langcodes==3.5.0
-language_data==1.3.0
-libclang==18.1.1
-lxml==6.0.0
-marisa-trie==1.2.1
-Markdown==3.8.2
-markdown-it-py==3.0.0
-MarkupSafe==3.0.2
-mdurl==0.1.2
-ml-dtypes==0.3.2
-mpmath==1.3.0
-multidict==6.6.3
-murmurhash==1.0.13
-namex==0.1.0
-networkx==3.4.2
-nltk==3.9.1
-numpy==1.24.4
-oauthlib==3.3.1
-opt_einsum==3.4.0
-optree==0.16.0
-packaging==24.2
-paramiko==3.5.1
-passlib==1.7.4
-pathspec==0.12.1
-pillow==11.3.0
-playwright==1.53.0
-praw==7.8.1
-prawcore==2.4.0
-preshed==3.0.10
-propcache==0.3.2
-protobuf==3.20.3
-psycopg2==2.9.10
-pyasn1==0.6.1
-pyasn1_modules==0.4.2
-pycparser==2.22
-pydantic==2.11.7
-pydantic_core==2.33.2
-pyee==13.0.0
-Pygments==2.19.2
-PyJWT==2.10.1
-PyNaCl==1.5.0
-python-dateutil==2.9.0.post0
-python-dotenv==1.1.1
-pytz==2025.2
-PyYAML==6.0.2
-regex==2024.11.6
-requests==2.32.4
-requests-oauthlib==2.0.0
-rich==14.0.0
-rsa==4.7.2
-s3transfer==0.13.0
-safetensors==0.5.3
-scikit-learn==1.7.0
-scipy==1.15.3
-semantic-version==2.10.0
-sentence-transformers==5.0.0
-shellingham==1.5.4
-six==1.17.0
-smart_open==7.3.0.post1
-sniffio==1.3.1
-soupsieve==2.7
-spacy==3.8.7
-spacy-legacy==3.0.12
-spacy-loggers==1.0.5
-srsly==2.5.1
-starlette==0.47.1
-sympy==1.14.0
-tensorboard==2.15.2
-tensorboard-data-server==0.7.2
-tensorflow==2.15.1
-tensorflow-estimator==2.15.0
-tensorflow-io-gcs-filesystem==0.37.1
-termcolor==2.5.0
-textblob==0.19.0
-tf_keras==2.15.1
-thinc==8.3.6
-threadpoolctl==3.6.0
-tokenizers==0.21.2
-torch==2.7.1
-tqdm==4.67.1
-transformers==4.53.2
-typer==0.16.0
-typing-inspection==0.4.1
-typing_extensions==4.14.1
-tzlocal==5.3.1
-update-checker==0.18.0
-urllib3==1.26.20
-utils==1.0.2
-uvicorn==0.35.0
-uvloop==0.21.0
-wasabi==1.1.3
-watchfiles==1.1.0
-wcwidth==0.2.13
-weasel==0.4.1
-websocket-client==1.8.0
-websockets==15.0.1
-Werkzeug==3.1.3
-wikipedia==1.4.0
-wrapt==1.14.1
-yarl==1.20.1 -->
+Prompt Start:
+
+I'm building a full-stack scraping and media monitoring app with the following setup:
+
+Backend: Python with Flask (for app routes) and FastAPI (for auth routes), deployed on Render
+
+Frontend: React, hosted on Netlify
+
+Scraping: Python using BeautifulSoup + Playwright
+
+Database: PostgreSQL on Render
+
+Authentication: JWT-based login/signup with hashed passwords
+
+Deployment Tools: Docker, Docker Compose, render.yaml, .env configs
+
+Main Issue: App deploys, but auth routes don’t work; likely CORS related. Unsure if Flask & FastAPI separation is causing issues.
+
+Tasks (in this order, wait for me to say “next”):
+
+📂 Generate a file structure visualization of my app
+
+🔄 Create a step-by-step flow diagram (textual with arrows) of how the app works
+
+🐞 Help me trace the deployment problem by analyzing individual files step by step (I’ll tell you which file to look at)
+
+
+
+
+Prompt clean up
+stick to the problems i gave you to solve. DO NOT BE PROACTIVE OR GIVE UNSOLLICITED ADVICE
+
+1. separate code too long
+2. proper error handling
+3. performance improvement 
+
+Wait for me to say next before moving from one task to another
+
+code is too long so breaking it into different files separating endpoints analytics.py, summary.py, entity.py, health.py --> I put them in a folder called routes but they are empty
+App is slow, if one route fails the whole app breaks,
+
+Let's address modularity
+Let's address performance - avoid things slowing the app down
+Let's address proper error handling so we know exactly where it comes from, what file, and the error message should have the name of the function, let's remove any commented, any unused file 
+
+here is the current project structure after adjusting we will create a new one.
+
+Do not be proactive, wait for me to say next let's go endpoint by endpoint 
+
+#PROJECT ROOT FILE STRUCTURE
+
+├── .env
+├── docker-compose.yml
+├── Dockerfile
+├── render.yaml
+├── requirements.txt
+├── pyproject.toml
+├── app.py                  # Flask app for querying and analytics
+├── Main.py                # FastAPI app for auth + launching scraping
+├── auth.py                # JWT logic (hashing, token creation)
+├── auth_routes.py         # FastAPI router for login/signup
+├── scrape_publication.py  # Core scrape logic
+├── ActuCdScrap.py         # Calls scrape_publication with Playwright
+├── runDB.py               # Handles DB insertion
+├── config/
+│   └── *.json             # One per publication (scraping config)
+├── routes/                # Backend route handlers
+│   ├── __init__.py
+│   ├── auth_routes.py     # FastAPI auth endpoints
+│   └── other_routes.py    # If any other route files exist
+├── utils/
+│   └── helper.py          # Helpers like loading configs, etc.
+├── db/
+│   └── models.py          # SQLAlchemy/Postgres models
+│   └── db.py              # DB connection logic
+
+Once you ready say next and ill give the Main.py so we can start separating endpoints into the above listed new empty .py files
+
+When you are ready to start with task one? ill paste the code 
+
+
+#PROJECT ROOT FILE STRUCTURE
+
+├── .env
+├── docker-compose.yml
+├── Dockerfile
+├── render.yaml
+├── requirements.txt
+├── pyproject.toml
+├── app.py                  # Flask app for querying and analytics
+├── Main.py                # FastAPI app for auth + launching scraping
+├── auth.py                # JWT logic (hashing, token creation)
+├── auth_routes.py         # FastAPI router for login/signup
+├── scrape_publication.py  # Core scrape logic
+├── ActuCdScrap.py         # Calls scrape_publication with Playwright
+├── runDB.py               # Handles DB insertion
+├── config/
+│   └── *.json             # One per publication (scraping config)
+├── routes/                # Backend route handlers
+│   ├── __init__.py
+│   ├── auth_routes.py     # FastAPI auth endpoints
+│   └── other_routes.py    # If any other route files exist
+├── utils/
+│   └── helper.py          # Helpers like loading configs, etc.
+├── db/
+│   └── models.py          # SQLAlchemy/Postgres models
+│   └── db.py              # DB connection logic
+
+
+#FRONTEND 
+
+├── .env
+├── .dockerignore
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── public/
+│   └── index.html
+├── src/
+│   ├── api.js             # Handles calls to Flask backend
+│   ├── store/             # State management (e.g., Zustand, Redux)
+│   ├── components/
+│   │   └── Search.jsx     # Form component for keyword queries
+│   ├── App.jsx
+│   └── main.jsx
+
+#APP FLOW DIAGRAM FOR DATA QUERY
+
+Frontend (React, Netlify)
+    |
+    |  (1) User submits keyword in Search.jsx
+    ↓
+api.js (React)
+    |
+    |  (2) Sends request to Flask endpoint in app.py
+    ↓
+app.py (Flask backend)
+    |
+    |  (3) Receives keyword, queries PostgreSQL DB
+    |      Also generates: article count, wordcloud, summaries
+    ↓
+PostgreSQL (Render-hosted)
+    ↑
+    |  (6) Populated earlier by scraper
+    |
+    |---------------------------------------------
+                            ^
+                            |
+                    runDB (insert scraped articles)
+                            ↑
+     scrape_publication() → returns list of articles (dicts)
+                            ↑
+        ActuCdScrap(pub_id, page) ← loads config for pub_id
+                            ↑
+        Main.py (entrypoint for scraping)
+                            ↑
+        sync_playwright launches browser context
+
+#APP FLOW DATA FOR AUTHENTICATION
+
+Frontend
+    |
+    |  (1) Login/Signup request to /auth (FastAPI)
+    ↓
+FastAPI app in Main.py
+    |
+    |  (2) Uses auth_routes.py → calls auth.py
+    |  (3) Verifies, hashes, generates JWT
+    ↓
+Frontend stores JWT for protected access
+
