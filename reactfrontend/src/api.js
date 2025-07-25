@@ -1,10 +1,7 @@
-
-
 import axios from 'axios';
 import { useSearchStore } from './store';
 import qs from 'qs';
 
-// Environment Configuration
 const API_BASE = import.meta.env.MODE === 'production'
   ? 'https://nine21iq.onrender.com'
   : 'http://localhost:5000';
@@ -13,12 +10,12 @@ export const API_AUTH_URL = import.meta.env.MODE === 'production'
   ? 'https://nine21iq.onrender.com/auth'
   : 'http://127.0.0.1:8000/auth';
 
-console.log('xxxx', API_AUTH_URL, API_BASE  )
+const generateRequestId = () => Math.random().toString(36).substring(2, 15) + 
+                             Math.random().toString(36).substring(2, 15);
 
-// Axios Client Configuration
 const apiClient = axios.create({
   baseURL: API_BASE,
-  timeout: 30000,
+  timeout: 60000,
   withCredentials: false,
   headers: {
     'Content-Type': 'application/json',
@@ -26,86 +23,143 @@ const apiClient = axios.create({
   paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' })
 });
 
-// Request Interceptor for logging/debugging
 apiClient.interceptors.request.use(config => {
+  const requestId = generateRequestId();
+  config.headers['X-Request-Id'] = requestId;
+
   if (import.meta.env.MODE === 'development') {
-    console.log('Request:', config.method?.toUpperCase(), config.url);
-    if (config.params) console.log('Params:', config.params);
-    if (config.data) console.log('Data:', config.data);
+    console.log('API Request:', {
+      requestId,
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      params: config.params,
+      data: config.data
+    });
   }
+
+  performance.mark(`api-request-start-${requestId}`);
   return config;
 });
 
-// Response Interceptor for error handling
 apiClient.interceptors.response.use(
-  response => response,
-  error => {
+  response => {
+    const requestId = response.config.headers['X-Request-Id'];
+    const duration = performance.measure(
+      `api-request-duration-${requestId}`,
+      `api-request-start-${requestId}`
+    ).duration;
+
     if (import.meta.env.MODE === 'development') {
-      console.error('API Error:', {
-        message: error.message,
-        url: error.config?.url,
-        status: error.response?.status,
-        data: error.response?.data
+      console.log('API Response:', {
+        requestId,
+        status: response.status,
+        duration: `${duration.toFixed(2)}ms`,
+        data: response.data
       });
+    }
+    return response;
+  },
+  error => {
+    const errorData = {
+      message: error.message,
+      code: error.code,
+      url: error.config?.url,
+      method: error.config?.method,
+      params: error.config?.params,
+      status: error.response?.status,
+      data: error.response?.data,
+      stack: error.stack
+    };
+
+    if (import.meta.env.MODE === 'development') {
+      console.error('API Error:', errorData);
     }
     return Promise.reject(error);
   }
 );
 
-// Mock Data for fallback
-const getMockArticles = () => [{
-  id: 'mock-1',
-  title: 'Service Unavailable',
-  content: 'Please check your connection and try again.',
-  isMock: true
-}];
+const normalizeError = (error) => {
+  if (error.response) {
+    return {
+      status: error.response.status,
+      message: error.response.data?.message || 'API request failed',
+      details: error.response.data?.details,
+      isApiError: true
+    };
+  } else if (error.request) {
+    return {
+      message: 'Network error - no response received',
+      isNetworkError: true
+    };
+  }
+  return {
+    message: error.message || 'Unknown API error',
+    isClientError: true
+  };
+};
 
-// API Service Methods
-export const api = {
-  /**
-   * Fetch summary data from API
-   * @param {Object} params - Search parameters
-   */
-  getSummary: async (params) => {
-    const store = useSearchStore.getState();
-    store.setIsLoadingSummary(true);
+const withRetry = async (requestFn, options = {}) => {
+  const { retries = 2, retryDelay = 1000 } = options;
+  let lastError = null;
 
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await apiClient.get('/get_summary', {
-        params,
-        headers: { 'Accept': 'application/json' },
-        timeout: 45000
-      });
-
-      if (response.data?.summary) {
-        store.setSummary(response.data.summary);
-      }
-
-      return response.data;
+      return await requestFn(attempt);
     } catch (error) {
-      store.setSummary(null);
-      if (import.meta.env.MODE === 'development') {
-        console.error('Summary Error:', error);
+      lastError = error;
+      if (error.response?.status === 404 || error.response?.status === 401) {
+        break;
       }
-      throw error;
-    } finally {
-      store.setIsLoadingSummary(false);
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        continue;
+      }
+      throw normalizeError(error);
     }
-  },
+  }
+  throw normalizeError(lastError);
+};
 
-  /**
-   * Fetch article data with filters
-   * @param {Object} params - Filter parameters
-   */
-  getData: async (params = {}) => {
+export const api = {
+// getSummary: async (params, options = {}) => {
+//     const store = useSearchStore.getState();
+//     store.setIsLoadingSummary(true);
+//     store.setError(null);
+
+//     try {
+//       const data = await withRetry(async (attempt) => {
+//         const response = await apiClient.get('/get_summary', {
+//           params,
+//           headers: { 
+//             'Accept': 'application/json',
+//             'X-Attempt': attempt 
+//           },
+//           timeout: options.timeout || 45000
+//         });
+//         return response.data;
+//       }, options);
+
+//       if (data?.summary) {
+//         store.setSummary(data.summary);
+//       }
+//       return data;
+//     } catch (error) {
+//       store.setSummary(null);
+//       store.setSummaryError(error.message);
+//       throw error;
+//     } finally {
+//       store.setIsLoadingSummary(false);
+//     }
+//   },
+
+getData: async (params = {}, options = {}) => {
     const store = useSearchStore.getState();
     store.setLoading(true);
+    store.setError(null);
 
     try {
-      // Prepare URL parameters
       const urlParams = new URLSearchParams();
 
-      // Add all parameters except sources
       Object.entries(params).forEach(([key, value]) => {
         if (key !== 'sources' && value !== undefined && value !== null) {
           if (Array.isArray(value)) {
@@ -116,238 +170,94 @@ export const api = {
         }
       });
 
-      // Handle sources separately
       if (params.sources?.length) {
         params.sources
           .filter(source => source)
           .forEach(source => urlParams.append('source', source));
       }
 
-      const response = await apiClient.get('/get_data', {
-        params: urlParams,
-        paramsSerializer: params => params.toString()
-      });
-
-      const data = response.data
-
+      const data = await withRetry(async (attempt) => {
+        const response = await apiClient.get('/get_data', {
+          params: urlParams,
+          paramsSerializer: params => params.toString(),
+          timeout: options.timeout || 90000,
+          headers: { 'X-Attempt': attempt }
+        });
+        return response.data;
+      }, options);
 
       if (data) {
-        console.log('let verify ', data.top_publications )
         store.setArticles(data.articles || []);
         store.setTopPublications(data.top_publications || []);
-        store.setLoading(false);
       }
-
-      return response.data;
+      return data;
     } catch (error) {
-      store.setLoading(false),
-      store.setError(error)
-      // store.setState({
-      //   isLoading: false,
-      //   error: error.message
-      // });
-
-      // Fallback to mock data in development
+      store.setError(error.message);
       if (import.meta.env.MODE === 'development') {
-        store.setArticles(getMockArticles());
+        store.setArticles([{
+          id: 'mock-1',
+          title: 'Service Unavailable',
+          content: 'Please check your connection and try again.',
+          isMock: true
+        }]);
       }
-
       throw error;
+    } finally {
+      store.setLoading(false);
     }
   },
 
-  /**
-   * Fetch entity data
-   * @param {Object} params - Entity search parameters
-   */
-// getEntity: async (params = {}) => {
-//   const store = useSearchStore.getState();
-//   store.setEntities([]);
-//   store.setIsLoadingEntity(true);
+  // getEntity: async (params = {}, options = {}) => {
+  //   const store = useSearchStore.getState();
+  //   store.setEntities([]);
+  //   store.setIsLoadingEntity(true);
+  //   store.setError(null);
 
-//   try {
-//     const urlParams = new URLSearchParams();
+  //   try {
+  //     const urlParams = new URLSearchParams();
 
-//     Object.entries(params).forEach(([key, value]) => {
-//       if (Array.isArray(value)) {
-//         value.forEach(v => urlParams.append(key, v));
-//       } else if (value !== undefined && value !== null) {
-//         urlParams.append(key, value);
-//       }
-//     });
+  //     Object.entries(params).forEach(([key, value]) => {
+  //       if (Array.isArray(value)) {
+  //         value.forEach(v => urlParams.append(key, v));
+  //       } else if (value !== undefined && value !== null) {
+  //         urlParams.append(key, value);
+  //       }
+  //     });
 
-//     // Append query string to URL directly
-//     const queryString = urlParams.toString();
-//     const url = queryString ? `/get_entities?${queryString}` : '/get_entities';
+  //     const queryString = urlParams.toString();
+  //     const url = queryString ? `/get_entities?${queryString}` : '/get_entities';
 
-//     const response = await apiClient.get(url);
+  //     const data = await withRetry(async (attempt) => {
+  //       const response = await apiClient.get(url, {
+  //         timeout: options.timeout || 30000,
+  //         headers: { 'X-Attempt': attempt }
+  //       });
+  //       return response.data;
+  //     }, options);
 
-//     return response.data;
-//   } catch (error) {
-//     store.setEntities([]);
-//     throw error;
-//   } finally {
-//     store.setIsLoadingEntity(false);
-//   }
-// },
+  //     store.setEntities(data?.entities || data || []);
+  //     return data;
+  //   } catch (error) {
+  //     store.setError(error.message);
+  //     store.setEntities([]);
+  //     throw error;
+  //   } finally {
+  //     store.setIsLoadingEntity(false);
+  //   }
+  // },
 
-
-  /**
-   * Health check endpoint
-   */
-  checkHealth: async () => {
+  checkHealth: async (options = {}) => {
     try {
-      const response = await apiClient.get('/health');
-      return response.data;
+      return await withRetry(async (attempt) => {
+        const response = await apiClient.get('/health', {
+          timeout: options.timeout || 5000,
+          headers: { 'X-Attempt': attempt }
+        });
+        return response.data;
+      }, options);
     } catch (error) {
-      if (import.meta.env.MODE === 'development') {
-        console.error('Health check failed:', error);
-      }
+      console.error('Health check failed:', error);
       throw error;
     }
-  },
-
-
+  }
 };
-
-// import axios from 'axios';
-// import { useSearchStore } from './store';
-// import qs from 'qs';
-
-// // Environment Configuration
-// const API_BASE = import.meta.env.MODE === 'production'
-//   ? 'https://nine21iq.onrender.com'
-//   : 'http://localhost:5000';
-
-// export const API_AUTH_URL = import.meta.env.MODE === 'production'
-//   ? 'https://nine21iq.onrender.com/auth'
-//   : 'http://127.0.0.1:8000/auth';
-
-// const apiClient = axios.create({
-//   baseURL: API_BASE,
-//   timeout: 30000,
-//   headers: { 'Content-Type': 'application/json' },
-//   paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' })
-// });
-
-// // Request Interceptor
-// apiClient.interceptors.request.use(config => {
-//   if (import.meta.env.MODE === 'development') {
-//     console.log('Request:', config.method?.toUpperCase(), config.url);
-//     if (config.params) console.log('Params:', config.params);
-//     if (config.data) console.log('Data:', config.data);
-//   }
-//   return config;
-// });
-
-// // Response Interceptor
-// apiClient.interceptors.response.use(
-//   response => response,
-//   error => {
-//     if (import.meta.env.MODE === 'development') {
-//       console.error('API Error:', {
-//         message: error.message,
-//         url: error.config?.url,
-//         status: error.response?.status,
-//         data: error.response?.data
-//       });
-//     }
-//     return Promise.reject(error);
-//   }
-// );
-
-// export const api = {
-//   getSummary: async (params) => {
-//     const store = useSearchStore.getState();
-//     store.setIsLoadingSummary(true);
-
-//     try {
-//       const response = await apiClient.get('/get_summary', { 
-//         params,
-//         timeout: 45000
-//       });
-
-//       if (response.data?.summary) {
-//         store.setSummary(response.data.summary);
-//       }
-//       return response.data;
-//     } catch (error) {
-//       store.setSummary(null);
-//       store.setError(error.message);
-//       throw error;
-//     } finally {
-//       store.setIsLoadingSummary(false);
-//     }
-//   },
-
-//   getData: async (params = {}) => {
-//     const store = useSearchStore.getState();
-//     store.setLoading(true);
-//     store.setError(null);
-
-//     try {
-//       const urlParams = new URLSearchParams();
-      
-//       // Add all parameters
-//       Object.entries(params).forEach(([key, value]) => {
-//         if (Array.isArray(value)) {
-//           value.forEach(v => urlParams.append(key, v));
-//         } else if (value !== undefined && value !== null) {
-//           urlParams.append(key, value);
-//         }
-//       });
-
-//       const response = await apiClient.get('/get_data', { params: urlParams });
-//       const data = response.data;
-
-//       if (data) {
-//         // Using individual setters with proper fallbacks
-//         store.setArticles(data.articles || []);
-//         store.setTopPublications({
-//           labels: data.top_publications?.labels || [],
-//           data: data.top_publications?.data || []
-//         });
-//         store.setTopCountries(data.top_countries || []);
-//         store.setWordcloudData(data.wordcloud_data || []);
-//         store.setTotalArticles(data.total_articles || 0);
-//         store.setTrendData({
-//           labels: data.trend_data?.labels || [],
-//           data: data.trend_data?.data || []
-//         });
-//       }
-
-//       return data;
-//     } catch (error) {
-//       store.setLoading(false);
-//       store.setError(error.message);
-//       throw error;
-//     }
-//   },
-
-//   getEntity: async (params = {}) => {
-//     const store = useSearchStore.getState();
-//     store.setEntities([]);
-//     store.setIsLoadingEntity(true);
-
-//     try {
-//       const response = await apiClient.get('/get_entities', { params });
-//       store.setEntities(response.data?.entities || response.data?.top_people || []);
-//       return response.data;
-//     } catch (error) {
-//       store.setError(error.message);
-//       throw error;
-//     } finally {
-//       store.setIsLoadingEntity(false);
-//     }
-//   },
-
-//   checkHealth: async () => {
-//     try {
-//       const response = await apiClient.get('/health');
-//       return response.data;
-//     } catch (error) {
-//       console.error('Health check failed:', error);
-//       throw error;
-//     }
-//   }
-// };

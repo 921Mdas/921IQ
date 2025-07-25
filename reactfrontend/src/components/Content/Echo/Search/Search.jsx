@@ -63,7 +63,6 @@ function BooleanSearch() {
       trend_data
     }) => {
 
-      console.log('are getting top pubs', top_publications)
 
    
 
@@ -219,7 +218,6 @@ const clearAll = () => {
 
     // // Fetch entities separately
     const entities = await api.getEntity(mergedQuery)
-    console.log('hello params', mergedQuery)
 
     useSearchStore.getState().setEntities(entities.top_people)
 

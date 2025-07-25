@@ -169,3 +169,8 @@ FastAPI app in Main.py
     ↓
 Frontend stores JWT for protected access
 
+
+
+# Commands
+
+curl -X POST http://localhost:5000/scrape

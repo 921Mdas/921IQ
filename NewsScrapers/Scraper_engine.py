@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import json
 from typing import Dict, List
 import logging
-from helper import process_article_date
+from Util.helpers import process_article_date
 import datetime
 import os
 import glob
