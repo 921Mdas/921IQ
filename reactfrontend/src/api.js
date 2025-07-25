@@ -140,10 +140,12 @@ export const api = {
 
       return response.data;
     } catch (error) {
-      store.setState({
-        isLoading: false,
-        error: error.message
-      });
+      store.setLoading(false),
+      store.setError(error)
+      // store.setState({
+      //   isLoading: false,
+      //   error: error.message
+      // });
 
       // Fallback to mock data in development
       if (import.meta.env.MODE === 'development') {
@@ -158,35 +160,37 @@ export const api = {
    * Fetch entity data
    * @param {Object} params - Entity search parameters
    */
-  getEntity: async (params = {}) => {
-    const store = useSearchStore.getState();
-    store.setEntities([]);
-    store.setIsLoadingEntity(true);
+// getEntity: async (params = {}) => {
+//   const store = useSearchStore.getState();
+//   store.setEntities([]);
+//   store.setIsLoadingEntity(true);
 
-    try {
-      const urlParams = new URLSearchParams();
-      
-      Object.entries(params).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach(v => urlParams.append(key, v));
-        } else if (value !== undefined && value !== null) {
-          urlParams.append(key, value);
-        }
-      });
+//   try {
+//     const urlParams = new URLSearchParams();
 
-      const response = await apiClient.get('/get_entities', {
-        params: urlParams,
-        paramsSerializer: params => params.toString()
-      });
+//     Object.entries(params).forEach(([key, value]) => {
+//       if (Array.isArray(value)) {
+//         value.forEach(v => urlParams.append(key, v));
+//       } else if (value !== undefined && value !== null) {
+//         urlParams.append(key, value);
+//       }
+//     });
 
-      return response.data;
-    } catch (error) {
-      store.setEntities([]);
-      throw error;
-    } finally {
-      store.setIsLoadingEntity(false);
-    }
-  },
+//     // Append query string to URL directly
+//     const queryString = urlParams.toString();
+//     const url = queryString ? `/get_entities?${queryString}` : '/get_entities';
+
+//     const response = await apiClient.get(url);
+
+//     return response.data;
+//   } catch (error) {
+//     store.setEntities([]);
+//     throw error;
+//   } finally {
+//     store.setIsLoadingEntity(false);
+//   }
+// },
+
 
   /**
    * Health check endpoint

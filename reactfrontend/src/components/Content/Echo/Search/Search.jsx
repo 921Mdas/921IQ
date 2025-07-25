@@ -219,6 +219,8 @@ const clearAll = () => {
 
     // // Fetch entities separately
     const entities = await api.getEntity(mergedQuery)
+    console.log('hello params', mergedQuery)
+
     useSearchStore.getState().setEntities(entities.top_people)
 
   } catch (err) {
