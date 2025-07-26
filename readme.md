@@ -173,4 +173,8 @@ Frontend stores JWT for protected access
 
 # Commands
 
-curl -X POST http://localhost:5000/scrape
+curl -X POST http://localhost:8000/scrape
+
+
+# backend port
+backend is running on port 8000 for 
