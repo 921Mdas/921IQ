@@ -89,7 +89,7 @@ export const useSearchStore = create(
         ...(loading ? { error: null } : {}) // Clear error when loading starts
       }),
 
-       setActiveTab: (tab) => {
+      setActiveTab: (tab) => {
         const validTabs = Object.values(get().TABS);
         if (validTabs.includes(tab)) {
           set({ activeTab: tab });

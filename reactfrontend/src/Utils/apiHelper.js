@@ -6,6 +6,7 @@ export const generateRequestId = () => Math.random().toString(36).substring(2, 1
 
 // Helper function to ensure array format
 export function normalizeParam(param) {
+
   if (!param) return [];
   if (Array.isArray(param)) return param;
   return [String(param)]; // Convert numbers/objects if needed

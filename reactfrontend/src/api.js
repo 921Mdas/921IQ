@@ -21,6 +21,10 @@ getData: async (params = {}) => {
 
   const exposedParam = Object.fromEntries(params);
 
+  console.log('testing new params',exposedParam)
+
+
+
   try {
     // Normalize parameters
     const normalizedParams = {
@@ -29,6 +33,7 @@ getData: async (params = {}) => {
       not: normalizeParam(exposedParam.not),
       sources: normalizeParam(exposedParam.sources)
     };
+
 
 
     // Simple API GET request
@@ -69,7 +74,8 @@ getSummary: async (params) => {
     }
   },
 
-  getEntities: async (params) => {
+ // updated
+getEntities: async (params) => {
     const store = useSearchStore.getState();
     store.setLoading(true);
     store.setError(null);
@@ -103,7 +109,7 @@ getSummary: async (params) => {
     } finally {
       store.setLoading(false);
     }
-  },
+},
 
 
 

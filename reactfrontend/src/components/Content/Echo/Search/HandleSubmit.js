@@ -42,7 +42,7 @@ export const handleSubmit = async (e, keywords, selectedSources) => {
   mergedQuery.and.forEach((k) => params.append("and", k));
   mergedQuery.or.forEach((k) => params.append("or", k));
   mergedQuery.not.forEach((k) => params.append("not", k));
-  mergedQuery.sources.forEach((s) => params.append("source", s));
+  mergedQuery.sources.forEach((s) => params.append("sources", s));
 
   window.history.pushState(null, "", `?${params.toString()}`);
 
