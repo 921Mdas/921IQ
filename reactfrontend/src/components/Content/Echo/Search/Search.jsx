@@ -7,10 +7,13 @@ import { api } from "../../../../api";
 import SourceSelector from "./SourceDropDown";
 import ActiveTABS from "../ActiveTABS";
 
+window.testApi = api; // Expose to global scope for testing
+
 function BooleanSearch() {
   const [keywords, setKeywords] = useState({ and: [], or: [], not: [] });
   const [inputs, setInputs] = useState({ and: "", or: "", not: "" });
   const selectedSources = useSearchStore(state => state.selectedSources);
+
 
 
 
@@ -53,6 +56,8 @@ function BooleanSearch() {
       apiParams.sources = store.selectedSources.join(',');
     }
 
+    
+
     // Fetch data
     api.getData(apiParams).then(({
       articles,
@@ -77,10 +82,28 @@ function BooleanSearch() {
     // api.getSummary(apiParams).then(({ summary }) => {
     //   store.setSummary(summary);
     // });
+    
+api.getSummary({ 
+  and: keywords.and, 
+  or: keywords.or,
+  sources: selectedSources 
+})
+.then(response => {
+  if (response.success) {
+    store.setSummary(response.summary);
+  } else {
+    console.error('Backend reported failure:', response);
+  }
+})
+.catch(error => {
+  console.error('API Error:', error);
+});
+
+ 
 
     return updated;
   });
-}, []);
+}, [keywords.and, keywords.or, selectedSources]);
   
   
   
@@ -150,12 +173,16 @@ const clearAll = () => {
     not: urlParams.getAll("not"),
   };
 
+
+
   const mergedQuery = {
   and: Array.from(new Set([...existingQuery.and, ...keywords.and])),
   or: Array.from(new Set([...existingQuery.or, ...keywords.or])),
   not: Array.from(new Set([...existingQuery.not, ...keywords.not])),
   sources: selectedSources, // ← independent field
 };
+
+
 
 
 
@@ -182,8 +209,6 @@ const clearAll = () => {
   mergedQuery.and.forEach((k) => params.append("and", k));
   mergedQuery.or.forEach((k) => params.append("or", k));
   mergedQuery.not.forEach((k) => params.append("not", k));
-
-
   mergedQuery.sources.forEach((s) => params.append("source", s)); // ← here
 
 
@@ -213,8 +238,10 @@ const clearAll = () => {
     useSearchStore.getState().setTrendData(trend_data);
 
     // Fetch summary separately
-    // const { summary } = await api.getSummary(mergedQuery);
-    // useSearchStore.getState().setSummary(summary);
+    const { summary } = await api.getSummary(mergedQuery);
+console.log('API MODULE LOADED mergedQuery params', summary);
+
+    useSearchStore.getState().setSummary(summary);
 
     // // Fetch entities separately
     // const entities = await api.getEntity(mergedQuery) 
@@ -226,6 +253,74 @@ const clearAll = () => {
   }
 };
 
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
+
+//   // Merge parameters
+//   const urlParams = new URLSearchParams(window.location.search);
+//   const mergedQuery = {
+//     and_keywords: Array.from(new Set([
+//       ...urlParams.getAll("and"), 
+//       ...keywords.and
+//     ])),
+//     or_keywords: Array.from(new Set([
+//       ...urlParams.getAll("or"), 
+//       ...keywords.or
+//     ])),
+//     not_keywords: Array.from(new Set([
+//       ...urlParams.getAll("not"),
+//       ...keywords.not
+//     ])),
+//     sources: selectedSources
+//   };
+
+//   // Check if empty
+//   const isEmpty = !mergedQuery.and_keywords.length && 
+//                  !mergedQuery.or_keywords.length && 
+//                  !mergedQuery.not_keywords.length;
+
+
+//   if (isEmpty) {
+//     useSearchStore.getState().setQuery({ and_keywords: [], or_keywords: [], not_keywords: [] });
+//     useSearchStore.getState().setArticles([]);
+//     useSearchStore.getState().resetAnalytics();
+//     window.history.replaceState(null, "", window.location.pathname);
+//     return;
+//   }
+
+//   // Update URL
+//   const urlSearchParams = new URLSearchParams();
+//   mergedQuery.and_keywords.forEach(k => urlSearchParams.append("and", k));
+//   mergedQuery.or_keywords.forEach(k => urlSearchParams.append("or", k));
+//   mergedQuery.not_keywords.forEach(k => urlSearchParams.append("not", k));
+//   mergedQuery.sources.forEach(s => urlSearchParams.append("source", s));
+//   window.history.pushState(null, "", `?${urlSearchParams.toString()}`);
+
+
+
+//   try {
+//     const [dataResponse] = await Promise.all([
+//       api.getData(mergedQuery),
+//       // api.getSummary(mergedQuery)
+//     ]);
+
+
+//     useSearchStore.getState().setQuery(mergedQuery);
+//     useSearchStore.getState().setArticles(dataResponse.articles || []);
+//     useSearchStore.getState().setTopCountries(dataResponse.top_countries || []);
+//     useSearchStore.getState().setWordcloudData(dataResponse.wordcloud_data || []);
+//     useSearchStore.getState().setTotalArticles(dataResponse.total_articles || 0);
+//     useSearchStore.getState().setTrendData(dataResponse.trend_data || []);
+
+//     // if (summaryResponse.success) {
+//     //   useSearchStore.getState().setSummary(summaryResponse.summary);
+//     // } else {
+//     //   useSearchStore.getState().setSummary("Could not generate summary");
+//     // }
+//   } catch (err) {
+//     useSearchStore.getState().setError(err.message || "Failed to fetch data");
+//   }
+// };
 
   useEffect(() => {
   const urlParams = new URLSearchParams(window.location.search);
