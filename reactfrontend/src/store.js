@@ -217,12 +217,12 @@ export const useSearchStore = create(
         // Only persist these values
         query: state.query,
         selectedSources: state.selectedSources,
-        // Analytics data
-        wordcloud_data: state.wordcloud_data,
-        top_publications: state.top_publications,
-        top_countries: state.top_countries,
-        trend_data: state.trend_data,
-        total_articles: state.total_articles
+        // Analytics data this is where data persist on reload
+        // wordcloud_data: state.wordcloud_data,
+        // top_publications: state.top_publications,
+        // top_countries: state.top_countries,
+        // trend_data: state.trend_data,
+        // total_articles: state.total_articles
       }),
       version: 1,
      migrate: (persistedState) => {  // ◄ Add this block (4 spaces indent)
