@@ -1,3 +1,4 @@
+
 # === Standard Library ===
 import os
 import logging
@@ -17,7 +18,7 @@ from playwright.sync_api import sync_playwright
 from routes.health import router as health_router
 from routes.data import router as getData_router
 # from routes.entity import router as getEntities_router
-# from routes.summary import router as getSummary_router
+from routes.summary import router as getSummary_router
 from auth_routes import router as auth_router
 from NewsScrapers.DRCongo.Actucd import ActuCdScrap
 
@@ -40,18 +41,17 @@ except Exception as e:
 # === Init FastAPI App ===
 app = FastAPI()
 
-# === Routers ===
-app.include_router(health_router)
-app.include_router(getData_router)
-# app.include_router(getEntities_router)
-# app.include_router(getSummary_router)
-app.include_router(auth_router, prefix="/auth")
-
 # === CORS Setup ===
+# Updated to include both localhost and 127.0.0.1 on port 5174
 mode = os.getenv("MODE", "development")
 origins = (
     [os.getenv("PRODUCTION_DOMAIN")] if mode == "production"
-    else ["http://localhost:5173", "http://127.0.0.1:5173"]
+    else [
+        "http://localhost:5173", 
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174"
+    ]
 )
 
 app.add_middleware(
@@ -60,7 +60,15 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
+
+# === Routers ===
+app.include_router(health_router)
+app.include_router(getData_router)
+# app.include_router(getEntities_router)
+app.include_router(getSummary_router)
+app.include_router(auth_router, prefix="/auth")
 
 # === AI + NLP Models ===
 kw_model = KeyBERT()
@@ -88,4 +96,4 @@ async def trigger_scraping(background_tasks: BackgroundTasks):
 # === Main Entry Point ===
 if __name__ == "__main__":
     print("🚀 Starting server with uvicorn...")
-    uvicorn.run("Main:app", host="0.0.0.0", port=5000, reload=True)
+    uvicorn.run("Main:app", host="0.0.0.0", port=8000, reload=True)

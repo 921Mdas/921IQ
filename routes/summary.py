@@ -1,122 +1,151 @@
-# from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
+from fastapi.responses import JSONResponse
+from Util.helpers import build_where_clause, get_db_connection
+from AI import AIService
+
+router = APIRouter()
+ai_service = AIService()
+
+@router.get("/get_summary")
+async def get_articles_summary(request: Request, ):
+    try:
+        
+        # Convert query params to lists
+        query_params = {
+            "and": request.query_params.getlist("and"),
+            "or": request.query_params.getlist("or"),
+            "not": request.query_params.getlist("not"),
+            "source": request.query_params.getlist("source")
+        }
+
+        
+        if not any(query_params.values()):
+            return JSONResponse(
+                {"success": False, "error": "At least one query parameter is required"},
+                status_code=400
+            )
+
+        # 2. Build database query
+        where_clause, db_params = build_where_clause(
+            query_params["and"],
+            query_params["or"],
+            query_params["not"],
+            query_params["source"]
+        )
+
+
+
+        # 3. Fetch titles
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"SELECT title FROM articles WHERE {where_clause} ORDER BY date DESC LIMIT 20",
+                    db_params
+                )
+                titles = [row[0] for row in cursor.fetchall()]
+
+        # 4. Prepare base response
+        response = {
+            "success": True,
+            "count": len(titles),
+            "titles": titles[:5]
+        }
+
+        # 5. Generate summary if enough articles
+        if len(titles) >= 3:
+            try:
+                response["summary"] = ai_service.summarize(titles[:15])
+            except Exception as e:
+                response["summary"] = "Summary generation failed"
+                response["success"] = False
+
+        return JSONResponse(response)
+
+    except Exception as e:
+        return JSONResponse(
+            {"success": False, "error": "Internal server error"},
+            status_code=500
+        )
+
+# from fastapi import APIRouter, Request, HTTPException, Query
 # from fastapi.responses import JSONResponse
-# import asyncio
-# import logging
 # from typing import List
-# from Util.helpers import (
-#     build_where_clause,
-#     get_db_connection
-# )
+# from Util.helpers import build_where_clause, get_db_connection
 # from AI import AIService
+# import logging
 
 # router = APIRouter()
-# logger = logging.getLogger(__name__)
 # ai_service = AIService()
-
-# SUMMARY_TIMEOUT = 10  # seconds
-# SUMMARY_ARTICLE_LIMIT = 15
-# TITLE_FETCH_LIMIT = 20
+# logger = logging.getLogger(__name__)
 
 # @router.get("/get_summary")
-# async def get_articles_summary(request: Request):
-#     """
-#     Fetch article titles based on query parameters, then generate a summary.
-#     Gracefully handles errors and avoids blocking the event loop.
-#     """
-#     response = {"success": False, "processing_time_ms": 0, "error": None}
-#     loop = asyncio.get_event_loop()
-#     start_time = loop.time()
-
+# async def get_articles_summary(
+#     request: Request,
+#     and_terms: List[str] = Query([], alias="and"),
+#     or_terms: List[str] = Query([], alias="or"),
+#     not_terms: List[str] = Query([], alias="not"),
+#     sources: List[str] = Query([], alias="source")
+# ):
 #     try:
-#         # Extract and clean query parameters
-#         params = {
-#             key: [v for v in request.query_params.getlist(key) if isinstance(v, str) and v.strip()]
-#             for key in ["and", "or", "not", "source"]
+#         # Maintain backward compatibility with direct URL params
+#         query_params = {
+#             "and": request.query_params.getlist("and") or and_terms,
+#             "or": request.query_params.getlist("or") or or_terms,
+#             "not": request.query_params.getlist("not") or not_terms,
+#             "source": request.query_params.getlist("source") or sources
 #         }
 
-#         if not any(params.values()):
-#             response["error"] = "At least one valid query parameter is required"
-#             return JSONResponse(content=response, status_code=400)
+#         logger.info(f"Received query params: {query_params}")
 
-#         # Build WHERE clause
-#         try:
-#             where_clause, query_params = build_where_clause(
-#                 params.get("and", []),
-#                 params.get("or", []),
-#                 params.get("not", []),
-#                 params.get("source", [])
+#         if not any(query_params.values()):
+#             return JSONResponse(
+#                 {"success": False, "error": "At least one query parameter is required"},
+#                 status_code=400
 #             )
-#         except Exception as clause_err:
-#             logger.error("Failed to build WHERE clause", exc_info=True)
-#             response["error"] = "Invalid query parameters"
-#             return JSONResponse(content=response, status_code=400)
 
-#         # Fetch titles safely
-#         async def fetch_titles() -> List[str]:
-#             def db_query():
-#                 with get_db_connection() as conn:
-#                     with conn.cursor() as cursor:
-#                         query = f"""
-#                             SELECT title FROM articles
-#                             WHERE {where_clause}
-#                             ORDER BY date DESC
-#                             LIMIT %s;
-#                         """
-#                         cursor.execute(query, query_params + [TITLE_FETCH_LIMIT])
-#                         return [row[0] for row in cursor.fetchall()]
-#             return await asyncio.to_thread(db_query)
+#         # 2. Build database query
+#         where_clause, db_params = build_where_clause(
+#             query_params["and"],
+#             query_params["or"],
+#             query_params["not"],
+#             query_params["source"]
+#         )
 
-#         try:
-#             titles = await asyncio.wait_for(fetch_titles(), timeout=5)
-#         except asyncio.TimeoutError:
-#             response["error"] = "Database query timeout"
-#             return JSONResponse(content=response, status_code=504)
+#         logger.info(f"Generated SQL WHERE clause: {where_clause}")
+#         logger.info(f"SQL parameters: {db_params}")
 
-#         processing_time = round((loop.time() - start_time) * 1000, 2)
+#         # 3. Fetch titles
+#         with get_db_connection() as conn:
+#             with conn.cursor() as cursor:
+#                 cursor.execute(
+#                     f"SELECT title FROM articles WHERE {where_clause} ORDER BY date DESC LIMIT 20",
+#                     db_params
+#                 )
+#                 titles = [row[0] for row in cursor.fetchall()]
 
-#         response.update({
+#         logger.info(f"Fetched {len(titles)} titles")
+
+#         # 4. Prepare base response
+#         response = {
 #             "success": True,
 #             "count": len(titles),
-#             "processing_time_ms": processing_time
-#         })
+#             "titles": titles[:5]
+#         }
 
-#         if not titles:
-#             response["summary"] = "No matching articles found"
-#             return JSONResponse(content=response)
+#         # 5. Generate summary if enough articles
+#         if len(titles) >= 3:
+#             try:
+#                 response["summary"] = ai_service.summarize(titles[:15])
+#             except Exception as e:
+#                 logger.error(f"Summary generation failed: {str(e)}")
+#                 response["summary"] = "Summary generation failed"
+#                 response["success"] = False
 
-#         if len(titles) < 3:
-#             response.update({
-#                 "summary": "Insufficient articles for a meaningful summary",
-#                 "titles": titles[:5]
-#             })
-#             return JSONResponse(content=response)
-
-#         # Generate summary with timeout
-#         try:
-#             summary = await asyncio.wait_for(
-#                 asyncio.to_thread(ai_service.summarize, tuple(titles[:SUMMARY_ARTICLE_LIMIT])),
-#                 timeout=SUMMARY_TIMEOUT
-#             )
-#             response.update({
-#                 "summary": summary,
-#                 "titles": titles[:5]
-#             })
-#         except asyncio.TimeoutError:
-#             logger.warning("Summary generation timed out")
-#             response.update({
-#                 "summary": "Summary generation timed out. Please try again later.",
-#                 "titles": titles[:5]
-#             })
-#         except Exception as summary_err:
-#             logger.error("Summary generation failed", exc_info=True)
-#             response.update({
-#                 "summary": "Summary currently unavailable due to internal error.",
-#                 "titles": titles[:5]
-#             })
-
-#         return JSONResponse(content=response)
+#         return response
 
 #     except Exception as e:
-#         logger.error("Unexpected error in get_articles_summary", exc_info=True)
-#         response.update({"error": "Internal server error"})
-#         return JSONResponse(content=response, status_code=500)
+#         logger.error(f"Internal server error: {str(e)}", exc_info=True)
+#         return JSONResponse(
+#             {"success": False, "error": "Internal server error"},
+#             status_code=500
+#         )

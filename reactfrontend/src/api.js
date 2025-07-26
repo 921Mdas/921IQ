@@ -20,10 +20,13 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' })
+  paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
+  crossdomain: true
 });
 
 apiClient.interceptors.request.use(config => {
+  console.log('FULL REQUEST CONFIG:', config);
+
   const requestId = generateRequestId();
   config.headers['X-Request-Id'] = requestId;
 
@@ -152,47 +155,166 @@ export const api = {
 //     }
 //   },
 
+// Simplified API call
+getSummary: async (params) => {
+  console.log('RAW PARAMS RECEIVED:', params); // Verify input
+  
+  // Convert params to URLSearchParams format
+  const queryParams = new URLSearchParams();
+  
+  // Handle AND terms
+  if (params.and?.length) {
+    params.and.forEach(term => queryParams.append('and', term));
+  }
+  
+  // Handle OR terms (if needed)
+  if (params.or?.length) {
+    params.or.forEach(term => queryParams.append('or', term));
+  }
+  
+  // Handle sources (if present)
+  if (params.sources) {
+    if (Array.isArray(params.sources)) {
+      params.sources.forEach(source => queryParams.append('source', source));
+    } else {
+      queryParams.append('source', params.sources);
+    }
+  }
+
+
+  try {
+    const response = await apiClient.get('/get_summary', {
+      params: queryParams,
+      paramsSerializer: params => params.toString(), // Force simple serialization
+      headers: { 
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('API CALL FAILED:', error);
+    throw error;
+  }
+},
+
+
+// getData: async (params = {}, options = {}) => {
+//     const store = useSearchStore.getState();
+//     store.setLoading(true);
+//     store.setError(null);
+
+//     try {
+//       const urlParams = new URLSearchParams();
+
+//       Object.entries(params).forEach(([key, value]) => {
+//         if (key !== 'sources' && value !== undefined && value !== null) {
+//           if (Array.isArray(value)) {
+//             value.forEach(v => urlParams.append(key, v));
+//           } else {
+//             urlParams.append(key, value);
+//           }
+//         }
+//       });
+
+//       if (params.sources?.length) {
+//         params.sources
+//           .filter(source => source)
+//           .forEach(source => urlParams.append('source', source));
+//       }
+
+//       const data = await withRetry(async (attempt) => {
+//         const response = await apiClient.get('/get_data', {
+//           params: urlParams,
+//           paramsSerializer: params => params.toString(),
+//           timeout: options.timeout || 90000,
+//           headers: { 'X-Attempt': attempt }
+//         });
+//         return response.data;
+//       }, options);
+
+//       if (data) {
+//         store.setArticles(data.articles || []);
+//         store.setTopPublications(data.top_publications || []);
+//       }
+//       return data;
+//     } catch (error) {
+//       store.setError(error.message);
+//       if (import.meta.env.MODE === 'development') {
+//         store.setArticles([{
+//           id: 'mock-1',
+//           title: 'Service Unavailable',
+//           content: 'Please check your connection and try again.',
+//           isMock: true
+//         }]);
+//       }
+//       throw error;
+//     } finally {
+//       store.setLoading(false);
+//     }
+//   },
+
 getData: async (params = {}, options = {}) => {
     const store = useSearchStore.getState();
     store.setLoading(true);
     store.setError(null);
 
     try {
-      const urlParams = new URLSearchParams();
+      // Create flat params object without nesting
+      const apiParams = {
+            and: Array.isArray(params.and_keywords) ? params.and_keywords : 
+                (Array.isArray(params.and) ? params.and : []),
+            or: Array.isArray(params.or_keywords) ? params.or_keywords : 
+                (Array.isArray(params.or) ? params.or : []),
+            not: Array.isArray(params.not_keywords) ? params.not_keywords : 
+                (Array.isArray(params.not) ? params.not : []),
+            source: Array.isArray(params.sources) ? params.sources : 
+                (Array.isArray(params.source) ? params.source : [])
+        };
 
-      Object.entries(params).forEach(([key, value]) => {
-        if (key !== 'sources' && value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
-            value.forEach(v => urlParams.append(key, v));
-          } else {
-            urlParams.append(key, value);
-          }
+         // Only proceed if we have at least one search term
+        if (!apiParams.and.length && !apiParams.or.length) {
+            console.log('No search terms provided');
+            store.setArticles([]);
+            return { success: true, articles: [] };
         }
-      });
 
-      if (params.sources?.length) {
-        params.sources
-          .filter(source => source)
-          .forEach(source => urlParams.append('source', source));
-      }
+
 
       const data = await withRetry(async (attempt) => {
         const response = await apiClient.get('/get_data', {
-          params: urlParams,
-          paramsSerializer: params => params.toString(),
+          params: apiParams,
+          paramsSerializer: (params) => {
+            // Custom serializer to handle arrays properly
+            return Object.entries(params)
+              .filter(([_, value]) => value !== undefined && value !== null)
+              .flatMap(([key, value]) => 
+                Array.isArray(value) 
+                  ? value.map(v => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`)
+                  : `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+              )
+              .join('&');
+          },
           timeout: options.timeout || 90000,
           headers: { 'X-Attempt': attempt }
         });
+
+       
+
+
         return response.data;
       }, options);
 
       if (data) {
+
         store.setArticles(data.articles || []);
         store.setTopPublications(data.top_publications || []);
       }
       return data;
     } catch (error) {
-      store.setError(error.message);
+      // ... error handling remains the same ...
+       store.setError(error.message);
       if (import.meta.env.MODE === 'development') {
         store.setArticles([{
           id: 'mock-1',

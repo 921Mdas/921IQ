@@ -23,6 +23,8 @@ from functools import lru_cache
 
 # Initialize logger
 logger = logging.getLogger(__name__)
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 
 # Constants
 TITLE_PREFIXES = {"President", "Dr", "Mr", "Mrs", "Ms", "Sir", "Madam", "Lord"}

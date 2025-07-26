@@ -109,6 +109,7 @@ const Mentions = () => {
   const isLoading = useSearchStore((state) => state.isLoading);
   const total_articles = useSearchStore((state) => state.total_articles);
 
+
   return (
     <div className='mentions-container'>
 
