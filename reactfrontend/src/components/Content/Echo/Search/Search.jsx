@@ -74,9 +74,9 @@ function BooleanSearch() {
       store.setTrendData(trend_data);
     });
 
-    api.getSummary(apiParams).then(({ summary }) => {
-      store.setSummary(summary);
-    });
+    // api.getSummary(apiParams).then(({ summary }) => {
+    //   store.setSummary(summary);
+    // });
 
     return updated;
   });
@@ -213,13 +213,13 @@ const clearAll = () => {
     useSearchStore.getState().setTrendData(trend_data);
 
     // Fetch summary separately
-    const { summary } = await api.getSummary(mergedQuery);
-    useSearchStore.getState().setSummary(summary);
+    // const { summary } = await api.getSummary(mergedQuery);
+    // useSearchStore.getState().setSummary(summary);
 
     // // Fetch entities separately
-    const entities = await api.getEntity(mergedQuery)
+    // const entities = await api.getEntity(mergedQuery) 
 
-    useSearchStore.getState().setEntities(entities.top_people)
+    // useSearchStore.getState().setEntities(entities.top_people)
 
   } catch (err) {
     console.error("Failed to fetch data:", err);

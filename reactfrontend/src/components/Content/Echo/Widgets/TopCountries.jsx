@@ -1,7 +1,9 @@
 import React, { useRef, useEffect } from 'react';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { Box, Skeleton, Typography } from '@mui/material';
 import { useSearchStore } from '../../../../store';
+import PublicIcon from '@mui/icons-material/Public';
 
 Chart.register(ChartDataLabels);
 
@@ -12,16 +14,68 @@ const countryFlagEmojiMap = {
   // add more as needed
 };
 
+// Skeleton Component
+const TopCountriesSkeleton = () => {
+  return (
+    <Box sx={{ width: '100%', height: 400, p: 2 }}>
+      {/* Title with MUI Icon */}
+      <Box sx={{ display: 'flex', alignItems: 'center', pb: 2 }}>
+        <PublicIcon fontSize="small" sx={{color:'#666666'}} />
+        <Typography sx={{
+          fontSize: 16,
+          fontWeight: 'bold',
+          pl: 1,
+          color: '#666666'
+        }}>
+          Top Countries by Mentions
+        </Typography>
+      </Box>
+
+      {/* Horizontal Bars Skeleton */}
+      <Box sx={{ 
+        width: '100%', 
+        height: 'calc(100% - 40px)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2
+      }}>
+        {[...Array(5)].map((_, i) => (
+          <Box key={i} sx={{ width: '100%' }}>
+            {/* Country name with flag skeleton */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+              <Skeleton variant="circular" width={20} height={20} sx={{ mr: 1 }} />
+              <Skeleton variant="text" width={`${Math.random() * 40 + 30}%`} height={20} />
+            </Box>
+            {/* Bar */}
+            <Skeleton
+              variant="rectangular"
+              width={`${100 - (i * 15)}%`}
+              height={20}
+              sx={{ 
+                borderRadius: '4px',
+                animation: 'pulse 1.5s ease-in-out infinite',
+                '@keyframes pulse': {
+                  '0%': { opacity: 0.6 },
+                  '50%': { opacity: 0.3 },
+                  '100%': { opacity: 0.6 }
+                }
+              }}
+            />
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
 const TopCountriesChart = React.memo(() => {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
-  const data = useSearchStore(state => state.top_countries)
-  const maxValue = Math.max(...data.map(d => d.count));
-  
-
+  const data = useSearchStore(state => state.top_countries);
+  const maxValue = data?.length ? Math.max(...data.map(d => d.count)) : 0;
 
   useEffect(() => {
-    if (!Array.isArray(data) || !canvasRef.current) return;
+    if (!Array.isArray(data) || data.length === 0 || !canvasRef.current) return;
 
     const ctx = canvasRef.current.getContext('2d');
 
@@ -50,10 +104,7 @@ const TopCountriesChart = React.memo(() => {
         plugins: {
           legend: { display: false },
           title: {
-            display: true,
-            text: '🌎 Top Countries by Mentions',
-            font: { size: 14 },
-            padding: { top: 10, bottom: 20, },
+            display: false // Disable Chart.js title since we're using MUI
           },
           datalabels: {
             display: true,
@@ -65,12 +116,12 @@ const TopCountriesChart = React.memo(() => {
           },
         },
         scales: {
-         x: {
+          x: {
             beginAtZero: true,
-            max: maxValue + maxValue * 0.15, // 15% padding to the right
+            max: maxValue + maxValue * 0.15,
             grid: { display: false, drawBorder: false, borderWidth: 0 },
             ticks: { display: false, drawTicks: false, precision: 0 },
-            },
+          },
           y: {
             grid: { display: false, drawBorder: false, borderWidth: 0 },
             ticks: {
@@ -94,9 +145,39 @@ const TopCountriesChart = React.memo(() => {
         chartRef.current.destroy();
       }
     };
-  }, [data]);
+  }, [data, maxValue]);
 
-  return <canvas ref={canvasRef} style={{ width: '100%', height: 400 }} />;
+  if (!Array.isArray(data) || data.length === 0) {
+    return <TopCountriesSkeleton />;
+  }
+
+  return (
+    <Box sx={{ width: '100%', height: 400 }}>
+      {/* MUI Title Section */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        pl: 2, 
+        pb: 1,
+        height: 40
+      }}>
+        <PublicIcon fontSize="small" sx={{color:'#666666'}}/>
+        <Typography sx={{
+          fontSize: 16,
+          fontWeight: 'bold',
+          pl: 1,
+          color: '#666666'
+        }}>
+          Top Countries by Mentions
+        </Typography>
+      </Box>
+      
+      {/* Chart Area */}
+      <Box sx={{ height: 'calc(100% - 40px)' }}>
+        <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+      </Box>
+    </Box>
+  );
 });
 
 export default TopCountriesChart;

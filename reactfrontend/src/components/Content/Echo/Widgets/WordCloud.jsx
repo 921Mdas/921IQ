@@ -2,197 +2,194 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import cloud from 'd3-cloud';
 import { useSearchStore } from '../../../../store';
+import { Box, Skeleton, Typography } from '@mui/material';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
-const WordCloud = ({  width = 500, height = 300, title = " ↑ Top Keywords" }) => {
+const WordCloud = ({ width = 500, height = 300 }) => {
   const containerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const layoutInstance = useRef(null);
-  const svgRef = useRef(null);
-  const words = useSearchStore(state => state.wordcloud_data)
-
-  // Cleanup function
-  const cleanup = () => {
-    if (layoutInstance.current) {
-      layoutInstance.current.stop();
-      layoutInstance.current = null;
-    }
-
-    if (containerRef.current && svgRef.current) {
-      try {
-        if (containerRef.current.contains(svgRef.current)) {
-          containerRef.current.removeChild(svgRef.current);
-        }
-      } catch (err) {
-        console.warn('Cleanup error:', err);
-      }
-      svgRef.current = null;
-    }
-  };
+  const words = useSearchStore(state => state.wordcloud_data);
 
   useEffect(() => {
     let isMounted = true;
+    setIsLoading(true);
 
-    const initializeWordCloud = () => {
-      try {
-        if (!Array.isArray(words) || words.length === 0) {
-          throw new Error(words ? 'Empty words array' : 'No words provided');
-        }
+    // Clear previous content
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
+    }
 
-        const validWords = words.filter(
-          word => word?.text && typeof word.size === 'number'
-        );
+    // Skip if no words
+    if (!words || words.length === 0) {
+      setIsLoading(false);
+      return;
+    }
 
-        if (validWords.length === 0) {
-          throw new Error('No valid words found');
-        }
+    // Filter valid words
+    const validWords = words.filter(
+      word => word?.text && typeof word.size === 'number'
+    );
 
-        cleanup();
+    if (validWords.length === 0) {
+      setIsLoading(false);
+      return;
+    }
 
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', '100%');
-        svg.setAttribute('height', '100%');
-        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-        svgRef.current = svg;
+    // Create SVG element
+    const svg = d3.select(containerRef.current)
+      .append('svg')
+      .attr('width', '100%')
+      .attr('height', '100%')
+      .attr('viewBox', `0 0 ${width} ${height}`);
 
-        const maxSize = d3.max(validWords, d => d.size) || 1;
-        const minSize = d3.min(validWords, d => d.size) || 1;
-        const fontSizeScale = d3.scaleLinear()
-          .domain([minSize, maxSize])
-          .range([12, 60])
-          .clamp(true);
+    const g = svg.append('g')
+      .attr('transform', `translate(${width / 2}, ${height / 2})`);
 
-        layoutInstance.current = cloud()
-          .size([width, height])
-          .words(validWords.map(word => ({
-            text: String(word.text).substring(0, 30),
-            size: fontSizeScale(word.size),
-            originalSize: word.size
-          })))
-          .padding(5)
-          .rotate(() => 10 - 10) // Fixed rotation
-          .font('sans-serif')
-          .fontSize(d => d.size)
-          .on('end', (cloudWords) => {
-            if (!isMounted) return;
+    // Calculate sizes
+    const maxSize = d3.max(validWords, d => d.size) || 1;
+    const minSize = d3.min(validWords, d => d.size) || 1;
+    const fontSizeScale = d3.scaleLinear()
+      .domain([minSize, maxSize])
+      .range([12, 60])
+      .clamp(true);
 
-            try {
-              while (svg.firstChild) {
-                svg.removeChild(svg.firstChild);
-              }
+    // Generate word cloud
+    cloud()
+      .size([width, height])
+      .words(validWords.map(word => ({
+        text: String(word.text).substring(0, 30),
+        size: fontSizeScale(word.size),
+        originalSize: word.size
+      })))
+      .padding(5)
+      .rotate(() => 0)
+      .font('sans-serif')
+      .fontSize(d => d.size)
+      .on('end', (cloudWords) => {
+        if (!isMounted) return;
 
-              // Add title to SVG
-              const titleText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-              titleText.setAttribute('x', width / 2);
-              titleText.setAttribute('y', 10);
-              titleText.setAttribute('text-anchor', 'middle');
-              titleText.style.fontSize = '11px';
-              titleText.style.fontWeight = '600';
-              titleText.style.fill = '#334155';
-              titleText.textContent = title;
-              svg.appendChild(titleText);
+        g.selectAll('text')
+          .data(cloudWords)
+          .enter()
+          .append('text')
+          .attr('text-anchor', 'middle')
+          .attr('transform', d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+          .style('font-size', d => `${d.size}px`)
+          .style('fill', d => {
+            const scale = d3.scaleLinear()
+              .domain([0, maxSize * 0.5, maxSize])
+              .range(['#6366f1', '#8b5cf6', '#ec4899']);
+            return scale(d.originalSize);
+          })
+          .text(d => d.text);
 
-              // Word group shifted down to not overlap with title
-              const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-              g.setAttribute('transform', `translate(${width / 2}, ${height / 2 + 10})`);
-              svg.appendChild(g);
-
-              cloudWords.forEach(word => {
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('transform', `translate(${word.x},${word.y})rotate(${word.rotate})`);
-                text.style.fontSize = `${word.size}px`;
-                text.style.fill = getColorForSize(word.originalSize, maxSize);
-                text.textContent = word.text;
-                g.appendChild(text);
-              });
-
-              if (containerRef.current && !containerRef.current.contains(svg)) {
-                containerRef.current.appendChild(svg);
-              }
-
-              setIsLoading(false);
-              setError(null);
-            } catch (err) {
-              if (isMounted) {
-                setError('Failed to render words');
-                setIsLoading(false);
-              }
-            }
-          });
-
-        layoutInstance.current.start();
-      } catch (err) {
-        if (isMounted) {
-          setError(err.message);
-          setIsLoading(false);
-        }
-      }
-    };
-
-    const timer = setTimeout(initializeWordCloud, 50);
+        setIsLoading(false);
+      })
+      .start();
 
     return () => {
       isMounted = false;
-      clearTimeout(timer);
-      cleanup();
+      // Cleanup is handled by D3's selection.remove()
     };
-  }, [words, width, height, title]);
+  }, [words, width, height]);
 
-  const getColorForSize = (size, maxSize) => {
-    const scale = d3.scaleLinear()
-      .domain([0, maxSize * 0.5, maxSize])
-      .range(['#6366f1', '#8b5cf6', '#ec4899']);
-    return scale(size);
-  };
+  const showSkeleton = isLoading || !words?.length;
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: '100%',
-        height: '100%',
-        minHeight: `${height}px`,
-        position: 'relative',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        paddingTop: '0px',
-      }}
-    >
-      {isLoading && !error && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: '#64748b',
-          fontSize: '14px'
-        }}>
-          Generating word cloud...
-        </div>
-      )}
+    <Box sx={{ 
+      width: '100%', 
+      height: '100%', 
+      minHeight: `${height}px`,
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
 
-      {error && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: '#ef4444',
-          padding: '16px',
-          textAlign: 'center',
-          maxWidth: '80%'
-        }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-            Failed to generate word cloud
-          </div>
-          <div style={{ fontSize: '13px', color: '#6b7280' }}>
-            {error}
-          </div>
-        </div>
-      )}
-    </div>
+ 
+      
+      {/* Content Area */}
+      <Box sx={{ 
+        flex: 1,
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {showSkeleton ? (
+          <>
+          <TitleSkeleton />
+          <WordCloudSkeleton />
+          </>
+        ) : (
+          <>
+          <TitleSkeleton />
+          <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+          </>
+        )}
+      </Box>
+    </Box>
   );
 };
+
+const WordCloudSkeleton = () => {
+  const words = Array.from({ length: 12 }, () => ({
+    width: Math.random() * 60 + 40,
+    size: Math.random() * 24 + 12,
+  }));
+
+  return (
+    <Box sx={{ 
+      width: '100%',
+      height: '100%',
+      p: 2,
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+ 
+
+      {/* Skeleton Content */}
+      <Box sx={{
+        width: '100%', 
+        flex: 1,
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignContent: 'center',
+        justifyContent: 'center',
+        gap: 2
+      }}>
+        {words.map((word, index) => (
+          <Skeleton
+            key={index}
+            variant="text"
+            width={`${word.width}px`}
+            height={`${word.size}px`}
+            sx={{
+              bgcolor: 'rgba(120, 120, 120, 0.1)',
+              borderRadius: '4px',
+              animation: 'pulse 2s ease-in-out infinite',
+            }}
+          />
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
+const TitleSkeleton =()=>{
+  return      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        pl: 2, 
+        pb: 1,
+        height: 40
+      }}>
+        <TrendingUpIcon fontSize="small" sx={{color:'#666666'}} />
+        <Typography sx={{
+          fontSize: 16,
+          fontWeight: 'bold',
+          pl: 1,
+          color: '#666666'
+        }}>
+          Top Keywords
+        </Typography>
+      </Box>
+}
 
 export default WordCloud;
