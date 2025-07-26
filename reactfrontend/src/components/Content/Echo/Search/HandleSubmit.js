@@ -3,7 +3,6 @@ import { useSearchStore } from "../../../../store";
 
 export const handleSubmit = async (e, keywords, selectedSources) => {
   e.preventDefault();
-
   // 1. Merge existing query params from URL with current keywords
   const urlParams = new URLSearchParams(window.location.search);
   const existingQuery = {
@@ -47,7 +46,6 @@ export const handleSubmit = async (e, keywords, selectedSources) => {
 
   window.history.pushState(null, "", `?${params.toString()}`);
 
-  
   // 5. Fetch data from API and update Zustand (commented out as in original)
   try {
     const data = await api.getData(params);
@@ -63,21 +61,31 @@ export const handleSubmit = async (e, keywords, selectedSources) => {
 
   //6. Fetch summaries from API and update Zustand
   try{
+    useSearchStore.getState().setIsLoadingSummary(true)
     const data = await api.getSummary(params);
     useSearchStore.getState().setSummary(data.summary || 'could not load summary, try again later');
+    useSearchStore.getState().setIsLoadingSummary(false)
+
 
   }catch(err){
     console.error("Failed to fetch summaries:", err);
+    useSearchStore.getState().setIsLoadingSummary(false)
+
   }
 
 
   // 7. Fetch entities from API and update Zustand
 
   try{
+    useSearchStore.getState().setIsLoadingEntity(true)
     const data = await api.getEntities(params);
     useSearchStore.getState().setEntities(data.top_people || []);
+    useSearchStore.getState().setIsLoadingEntity(false)
+
   }catch(err){
     console.error("Failed to fetch entities:", err);
+    useSearchStore.getState().setIsLoadingEntity(false)
+
      
   }
 };
