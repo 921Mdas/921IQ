@@ -1,7 +1,9 @@
+
+
 import React from 'react';
 import { useSearchStore } from '../../../store';
-import EqualizerIcon from '@mui/icons-material/Equalizer'; // Volume icon
-import PeopleIcon from '@mui/icons-material/People'; // Entities icon
+import EqualizerIcon from '@mui/icons-material/Equalizer';
+import PeopleIcon from '@mui/icons-material/People';
 
 const ActiveTABS = React.memo(() => {
   const activeTab = useSearchStore(state => state.activeTab);
@@ -12,23 +14,19 @@ const ActiveTABS = React.memo(() => {
     <div className='echo_tabs'>
       <button
         className={`tab-button ${activeTab === TABS.VOLUME ? 'active' : ''}`}
-        onClick={() => {
-  if (activeTab !== TABS.VOLUME) setActiveTab(TABS.VOLUME);
-}}
+        onClick={() => setActiveTab(TABS.VOLUME)}
       >
-       <span>
-        <EqualizerIcon className="tab-icon" />
+        <span>
+          <EqualizerIcon className="tab-icon" />
         </span> 
         <span>Volume</span>
       </button>
       <button
         className={`tab-button ${activeTab === TABS.ENTITIES ? 'active' : ''}`}
-      onClick={() => {
-  if (activeTab !== TABS.ENTITIES) setActiveTab(TABS.ENTITIES);
-}}
+        onClick={() => setActiveTab(TABS.ENTITIES)}
       >
         <span>
-        <PeopleIcon className="tab-icon" />
+          <PeopleIcon className="tab-icon" />
         </span>
         <span>Entities</span>
       </button>
