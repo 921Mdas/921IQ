@@ -127,30 +127,31 @@ export const createApiClient = (baseURL) => {
 export const prepareSearchParams = (params) => {
   // Convert params to URLSearchParams format
   const queryParams = new URLSearchParams();
-  
-  // Handle AND terms
-  if (params.and?.length) {
-    params.and.forEach(term => queryParams.append('and', term));
+
+  // Ensure `and` is always an array
+  if (params.and) {
+    const andTerms = Array.isArray(params.and) ? params.and : [params.and];
+    andTerms.forEach(term => queryParams.append('and', term));
   }
-  
+
   // Handle OR terms (if needed)
-  if (params.or?.length) {
-    params.or.forEach(term => queryParams.append('or', term));
+  if (params.or) {
+    const orTerms = Array.isArray(params.or) ? params.or : [params.or];
+    orTerms.forEach(term => queryParams.append('or', term));
   }
-  
+
   // Handle NOT terms (if needed)
-  if (params.not?.length) {
-    params.not.forEach(term => queryParams.append('not', term));
+  if (params.not) {
+    const notTerms = Array.isArray(params.not) ? params.not : [params.not];
+    notTerms.forEach(term => queryParams.append('not', term));
   }
-  
-  // Handle sources
+
+  // Handle sources (single or array)
   if (params.sources) {
-    if (Array.isArray(params.sources)) {
-      params.sources.forEach(source => queryParams.append('source', source));
-    } else {
-      queryParams.append('source', params.sources);
-    }
+    const sources = Array.isArray(params.sources) ? params.sources : [params.sources];
+    sources.forEach(source => queryParams.append('source', source));
   }
+
 
   return queryParams;
 };

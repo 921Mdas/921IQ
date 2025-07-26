@@ -13,6 +13,7 @@ const apiClient = createApiClient(API_BASE);
 
 export const api = {
 
+// updated
 getData: async (params = {}) => {
   const store = useSearchStore.getState();
   store.setLoading(true);
@@ -48,9 +49,10 @@ getData: async (params = {}) => {
 
 
 
-  getSummary: async (params) => {
-    console.log('RAW PARAMS RECEIVED:', params);
-    const queryParams = prepareSearchParams(params);
+getSummary: async (params) => {
+    const exposedParam = Object.fromEntries(params);
+
+    const queryParams = prepareSearchParams(exposedParam);
 
     try {
       const response = await apiClient.get('/get_summary', {

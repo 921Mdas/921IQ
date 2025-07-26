@@ -57,8 +57,16 @@ export const handleSubmit = async (e, keywords, selectedSources) => {
     useSearchStore.getState().setTopCountries(data?.top_countries || []);
     useSearchStore.getState().setTrendData(data?.trend_data || []);
     useSearchStore.getState().setTotalArticles(data?.total_articles || 0);
-    console.log('received data in handleSubmit', data)
   } catch (err) {
     console.error("Failed to fetch data:", err);
+  }
+
+  //6. Fetch summaries from API and update Zustand
+  try{
+    const data = await api.getSummary(params);
+    useSearchStore.getState().setSummary(data.summary || 'could not load summary, try again later');
+
+  }catch(err){
+    console.error("Failed to fetch summaries:", err);
   }
 };
