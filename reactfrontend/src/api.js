@@ -46,9 +46,7 @@ getData: async (params = {}) => {
   }
 },
 
-
-
-
+// updated
 getSummary: async (params) => {
     const exposedParam = Object.fromEntries(params);
 
@@ -71,9 +69,45 @@ getSummary: async (params) => {
     }
   },
 
+  getEntities: async (params) => {
+    const store = useSearchStore.getState();
+    store.setLoading(true);
+    store.setError(null);
+
+    const exposedParam = Object.fromEntries(params);
+
+    const normalizedParams = {
+      and: normalizeParam(exposedParam.and), // Directly use the key you have
+      or: normalizeParam(exposedParam.or),
+      not: normalizeParam(exposedParam.not),
+      sources: normalizeParam(exposedParam.sources)
+    };
 
 
-  checkHealth: async (options = {}) => {
+    try {
+      const response = await apiClient.get('/get_entities', {
+        params: normalizedParams,
+        headers: { 
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('test entities data', response.data)
+      
+      return response.data;
+    } catch (error) {
+      store.setError(error.message);
+      console.error("API CALL FAILED:", error);
+      throw error;
+    } finally {
+      store.setLoading(false);
+    }
+  },
+
+
+
+checkHealth: async (options = {}) => {
     try {
       return await withRetry(async (attempt) => {
         const response = await apiClient.get('/health', {
@@ -86,5 +120,5 @@ getSummary: async (params) => {
       console.error('Health check failed:', error);
       throw error;
     }
-  }
+}
 };

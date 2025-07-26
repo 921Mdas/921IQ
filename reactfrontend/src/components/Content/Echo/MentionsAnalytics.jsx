@@ -54,14 +54,12 @@ Chart.register(
   ChartTooltip
 );
 
-const MentionsAnalytics = ({data}) => {
-
-const {summary, isLoading, trend_data, wordcloud_data, top_publications, top_countries} = data;
+const MentionsAnalytics = () => {
 
 
-  const summaryValue = useMemo(() => (
-    typeof summary === 'string' ? summary : summary?.summary || ''
-  ), [summary]);
+
+  const isLoading = useSearchStore(state => state.isLoading);
+
 
 
 
@@ -88,7 +86,7 @@ const {summary, isLoading, trend_data, wordcloud_data, top_publications, top_cou
       </div>
 
       <div className="top_countries">
-        <TopCountriesChart data={top_countries} />
+        <TopCountriesChart  />
       </div>
     </div>
   );

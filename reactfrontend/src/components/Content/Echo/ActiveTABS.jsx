@@ -12,7 +12,9 @@ const ActiveTABS = React.memo(() => {
     <div className='echo_tabs'>
       <button
         className={`tab-button ${activeTab === TABS.VOLUME ? 'active' : ''}`}
-        onClick={() => setActiveTab(TABS.VOLUME)}
+        onClick={() => {
+  if (activeTab !== TABS.VOLUME) setActiveTab(TABS.VOLUME);
+}}
       >
        <span>
         <EqualizerIcon className="tab-icon" />
@@ -21,7 +23,9 @@ const ActiveTABS = React.memo(() => {
       </button>
       <button
         className={`tab-button ${activeTab === TABS.ENTITIES ? 'active' : ''}`}
-        onClick={() => setActiveTab(TABS.ENTITIES)}
+      onClick={() => {
+  if (activeTab !== TABS.ENTITIES) setActiveTab(TABS.ENTITIES);
+}}
       >
         <span>
         <PeopleIcon className="tab-icon" />

@@ -1,7 +1,12 @@
 import subprocess
 
 # Start FastAPI backend with uvicorn
-backend = subprocess.Popen(["uvicorn", "Main:app", "--reload"])
+backend = subprocess.Popen([
+    "uvicorn", 
+    "Main:app", 
+    "--reload", 
+    "--reload-dir", "./Main.py"
+])
 
 # Start scrapers (Main.py, assuming it doesn't contain the FastAPI app anymore)
 scraper = subprocess.Popen(["python3", "Main.py"])

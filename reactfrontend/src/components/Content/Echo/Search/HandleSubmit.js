@@ -69,4 +69,15 @@ export const handleSubmit = async (e, keywords, selectedSources) => {
   }catch(err){
     console.error("Failed to fetch summaries:", err);
   }
+
+
+  // 7. Fetch entities from API and update Zustand
+
+  try{
+    const data = await api.getEntities(params);
+    useSearchStore.getState().setEntities(data.top_people || []);
+  }catch(err){
+    console.error("Failed to fetch entities:", err);
+     
+  }
 };
