@@ -69,7 +69,7 @@ class AIService:
         return -1
 
     @lru_cache(maxsize=128)
-    def summarize(self, titles:str) -> str:
+    def summarize(self, titles: Tuple[str, ...]) -> str:
         """Summarize titles with optimized parameters"""
         try:
             if not titles:
