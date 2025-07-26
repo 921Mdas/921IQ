@@ -17,7 +17,7 @@ from playwright.sync_api import sync_playwright
 # === Local Modules ===
 from routes.health import router as health_router
 from routes.data import router as getData_router
-# from routes.entity import router as getEntities_router
+from routes.entity import router as getEntities_router
 from routes.summary import router as getSummary_router
 from auth_routes import router as auth_router
 from NewsScrapers.DRCongo.Actucd import ActuCdScrap
@@ -66,7 +66,7 @@ app.add_middleware(
 # === Routers ===
 app.include_router(health_router)
 app.include_router(getData_router)
-# app.include_router(getEntities_router)
+app.include_router(getEntities_router)
 app.include_router(getSummary_router)
 app.include_router(auth_router, prefix="/auth")
 
@@ -96,4 +96,4 @@ async def trigger_scraping(background_tasks: BackgroundTasks):
 # === Main Entry Point ===
 if __name__ == "__main__":
     print("🚀 Starting server with uvicorn...")
-    uvicorn.run("Main:app", host="0.0.0.0", port=8000, reload=True)
+    # uvicorn.run("Main:app", host="0.0.0.0", port=8000, reload=True)
