@@ -122,13 +122,14 @@ from Util.helpers import (
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 @router.get("/get_data")
 async def get_data(
     request: Request,
     and_terms: List[str] = Query([], alias="and"),
     or_terms: List[str] = Query([], alias="or"),
     not_terms: List[str] = Query([], alias="not"),
-    sources: List[str] = Query([], alias="source")
+    sources: List[str] = Query([], alias="sources")
 ):
     start_time = time.time()
     try:
@@ -137,7 +138,7 @@ async def get_data(
             "and_keywords": request.query_params.getlist("and") or and_terms,
             "or_keywords": request.query_params.getlist("or") or or_terms,
             "not_keywords": request.query_params.getlist("not") or not_terms,
-            "sources": request.query_params.getlist("source") or sources
+            "sources": request.query_params.getlist("sources") or sources
         }
 
         logger.info(f"Received params: {params}")
