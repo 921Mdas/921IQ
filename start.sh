@@ -1,3 +1,2 @@
 #!/bin/bash
-source venv/bin/activate
-python3 runboth.py
+uvicorn Main:app --host 0.0.0.0 --port $PORT
