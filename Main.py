@@ -96,4 +96,11 @@ async def trigger_scraping(background_tasks: BackgroundTasks):
 # === Main Entry Point ===
 if __name__ == "__main__":
     print("🚀 Starting server with uvicorn...")
-    # uvicorn.run("Main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "Main:app",
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 8000)),
+        reload=True,
+        reload_includes=["Main.py"],  # Only watch this specific file
+        reload_excludes=["*"]         # Ignore everything else
+    )
