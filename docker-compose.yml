@@ -1,20 +1,38 @@
-version: "3.8"
+
 
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  app:
+    build: .
     ports:
-      - "5000:5000"
-
-  frontend:
-    build:
-      context: ./reactfrontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:5173"
+      - "8000:8000"
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - MODE=production
+      - PORT=8000
+      - PRODUCTION_DOMAIN=https://nine21iq.onrender.com
+      - DATABASE_URL=postgresql://vongaimusvaire:MySushi32@db:5432/echo_db  # Direct URL
+    secrets:
+      - jwt_secret
+      - reddit_credentials
     depends_on:
-      - backend
+      - db
+    command: ["uvicorn", "Main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: echo_db
+      POSTGRES_USER: vongaimusvaire
+      POSTGRES_PASSWORD: MySushi32  # Must match DATABASE_URL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+
+secrets:
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  reddit_credentials:
+    file: ./secrets/reddit_credentials.txt

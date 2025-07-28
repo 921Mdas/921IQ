@@ -31,4 +31,16 @@ dist/
 .ipynb_checkpoints/
 
 # Misc
-*.sqlite3
+*.sqlite3secrets/
+/secrets/
+
+*.safetensors
+*.bin
+*.pt
+*.json
+*.lock
+.cache/
+*.pt
+*.ckpt
+*.h5
+*.weights

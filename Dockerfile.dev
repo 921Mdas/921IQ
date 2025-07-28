@@ -1,16 +1,18 @@
-# Production Dockerfile
+# Development Dockerfile
 FROM python:3.11-slim
 
 # Set working directory and Python path
 WORKDIR /app
 ENV PYTHONPATH=/app \
     TRANSFORMERS_CACHE=/app/.cache \
-    HF_HOME=/app/.cache
+    HF_HOME=/app/.cache \
+    MODE=development
 
-# Install system dependencies
+# Install system dependencies + dev tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc python3-dev libpq-dev \
+    postgresql-client vim curl \
     wget libnss3 libnspr4 libatk1.0-0 \
     libatk-bridge2.0-0 libcups2 libdrm2 \
     libxkbcommon0 libxcomposite1 libxdamage1 \
@@ -25,16 +27,12 @@ RUN mkdir -p /app/.cache && chmod 777 /app/.cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright
+# Install Playwright with dev dependencies
 RUN playwright install chromium && \
-    playwright install-deps
+    playwright install --with-deps
 
-# Copy application code
+# Copy application code (mounted as volume in compose)
 COPY . .
 
-# Runtime config
-ENV MODE=production \
-    PORT=8000
-
-EXPOSE $PORT
-CMD ["uvicorn", "Main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000
+CMD ["uvicorn", "Main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
