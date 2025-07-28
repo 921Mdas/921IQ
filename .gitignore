@@ -40,3 +40,7 @@ dist/
 *.json
 *.lock
 .cache/
+*.pt
+*.ckpt
+*.h5
+*.weights
