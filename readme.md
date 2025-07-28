@@ -87,8 +87,7 @@ When you are ready to start with task one? ill paste the code
 ├── render.yaml
 ├── requirements.txt
 ├── pyproject.toml
-├── app.py                  # Flask app for querying and analytics
-├── Main.py                # FastAPI app for auth + launching scraping
+├── Main.py                # FastAPI app for auth + launching scraping + query and analytics
 ├── auth.py                # JWT logic (hashing, token creation)
 ├── auth_routes.py         # FastAPI router for login/signup
 ├── scrape_publication.py  # Core scrape logic
@@ -117,8 +116,8 @@ When you are ready to start with task one? ill paste the code
 ├── public/
 │   └── index.html
 ├── src/
-│   ├── api.js             # Handles calls to Flask backend
-│   ├── store/             # State management (e.g., Zustand, Redux)
+│   ├── api.js             # Handles calls to FastAPI
+│   ├── store/             # State management Zustand
 │   ├── components/
 │   │   └── Search.jsx     # Form component for keyword queries
 │   ├── App.jsx

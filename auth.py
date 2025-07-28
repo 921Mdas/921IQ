@@ -17,6 +17,7 @@ def verify_password(password: str, hashed: str) -> bool:
 def create_token(user_id: int) -> str:
     return jwt.encode({"user_id": user_id}, JWT_SECRET, algorithm="HS256")
 
+
 def decode_token(token: str) -> int:
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
