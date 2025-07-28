@@ -33,3 +33,10 @@ dist/
 # Misc
 *.sqlite3secrets/
 /secrets/
+
+*.safetensors
+*.bin
+*.pt
+*.json
+*.lock
+.cache/
