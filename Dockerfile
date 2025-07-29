@@ -36,5 +36,5 @@ COPY . .
 ENV MODE=production \
     PORT=8000
 
-EXPOSE $PORT
+EXPOSE 8000
 CMD ["sh", "-c", "uvicorn Main:app --host 0.0.0.0 --port ${PORT:-8000}"]
